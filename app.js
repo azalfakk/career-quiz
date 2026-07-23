@@ -235,7 +235,7 @@ function renderAch() {
 
 // ---------- меню ----------
 const overlay = $('overlay');
-const screens = ['scrMain', 'scrDiff', 'scrComp', 'scrEnd', 'scrBoard', 'scrAch', 'scrPrice', 'scrDaily', 'scrDuel', 'scrDuelEnd'];
+const screens = ['scrMain', 'scrDiff', 'scrComp', 'scrEnd', 'scrBoard', 'scrAch', 'scrPrice', 'scrDaily', 'scrDuel', 'scrDuelEnd', 'scrReport', 'scrReports'];
 function show(id) {
   overlay.classList.remove('hidden');
   screens.forEach(s => $(s).style.display = s === id ? '' : 'none');
@@ -243,11 +243,29 @@ function show(id) {
 }
 function hideMenu() { overlay.classList.add('hidden'); }
 
-$('menuBtn').onclick = () => {
-  if (mode === 'comp' && compTimer) return;
-  if (mode === 'duel') { if (tg && tg.showConfirm) { tg.showConfirm('Выйти из дуэли? Прогресс пропадёт.', ok => { if (ok) { duel = null; mode = 'normal'; syncTopBar(); show('scrMain'); } }); return; } if (!confirm('Выйти из дуэли?')) return; duel = null; mode = 'normal'; syncTopBar(); }
-  show('scrMain');
-};
+function doConfirm(msg, cb) {
+  if (tg && tg.showConfirm) tg.showConfirm(msg, ok => ok && cb());
+  else if (confirm(msg)) cb();
+}
+// единый выход в меню из любого квиза (обычный/дневной/help — состояние сохраняется)
+function goMenu() {
+  if (mode === 'comp' && compTimer) {
+    doConfirm('Выйти из соревнования? Текущий результат будет засчитан.', () => stopComp());
+    return;
+  }
+  if (mode === 'duel') {
+    doConfirm('Выйти из дуэли? Прогресс не сохранится.', () => {
+      duel = null; mode = 'normal'; syncTopBar();
+      if (difficulty && !restoreGame()) { /* нет сохранёнки — покажем меню */ }
+      show('scrMain');
+    });
+    return;
+  }
+  if (mode === 'help') { mode = 'normal'; syncTopBar(); if (difficulty && !restoreGame()) cur = null; show('scrMain'); return; }
+  show('scrMain'); // обычный/дневной: игрок и открытое сохраняются в памяти
+}
+$('menuBtn').onclick = goMenu;
+$('backTop').onclick = goMenu;
 $('backMain').onclick = hideMenu;
 $('goNormal').onclick = () => {
   const c = { easy: 0, medium: 0, hard: 0 };
@@ -298,14 +316,18 @@ function updateMenuBtn() {
   if (mode === 'comp') { b.textContent = '🏆'; b.className = 'diffBtn'; return; }
   if (mode === 'duel') { b.textContent = '⚔️'; b.className = 'diffBtn'; return; }
   if (mode === 'daily') { b.textContent = '🌟'; b.className = 'diffBtn'; return; }
+  if (mode === 'help') { b.textContent = '🆘'; b.className = 'diffBtn'; return; }
   b.textContent = DIFF_LABEL[difficulty] || 'Меню';
   b.className = 'diffBtn ' + (difficulty && difficulty !== 'all' ? difficulty : '');
 }
 function syncTopBar() {
-  $('statNormal').style.display = (mode === 'comp' || mode === 'duel') ? 'none' : '';
+  $('statNormal').style.display = (mode === 'comp' || mode === 'duel' || mode === 'help') ? 'none' : '';
   $('statComp').style.display = mode === 'comp' ? '' : 'none';
   $('statDuel').style.display = mode === 'duel' ? '' : 'none';
-  $('giveBtn').textContent = mode === 'comp' ? 'Пропустить ➜' : (mode === 'duel' ? 'Не знаю ➜' : 'Сдаться (серия сгорит)');
+  $('giveBtn').textContent = mode === 'comp' ? 'Пропустить ➜'
+    : mode === 'duel' ? 'Не знаю ➜'
+    : mode === 'help' ? 'Показать ответ 👀'
+    : 'Сдаться (серия сгорит)';
   updateMenuBtn();
 }
 
@@ -369,7 +391,7 @@ function startComp() {
 }
 function compNext() {
   if (!compQueue.length) compQueue = shuffle([...PLAYERS]);
-  cur = compQueue.pop(); openedIdx = []; finished = false;
+  cur = compQueue.pop(); openedIdx = []; revealedRows = 1; finished = false;
   render();
 }
 function stopComp() {
@@ -409,7 +431,7 @@ $('goDaily').onclick = () => {
 $('backDaily').onclick = () => show('scrMain');
 $('dailyStart').onclick = () => {
   mode = 'daily';
-  cur = dailyPlayer(); openedIdx = []; finished = false;
+  cur = dailyPlayer(); openedIdx = []; revealedRows = 1; finished = false;
   syncTopBar(); hideMenu(); render();
 };
 function dailyFinish(win) {
@@ -511,7 +533,7 @@ $('duelStart').onclick = e => {
 };
 function duelRound() {
   cur = duel.players[duel.i];
-  openedIdx = []; finished = false;
+  openedIdx = []; revealedRows = 1; finished = false;
   $('duelProg').textContent = (duel.i + 1) + '/10';
   $('duelScore').textContent = duel.score;
   render();
@@ -543,6 +565,103 @@ function duelEnd() {
 }
 $('duelEndMenu').onclick = () => show('scrMain');
 
+// ---------- помощь: поделиться карьерой другу ----------
+function roundRectPath(g, x, y, w, h, r) {
+  g.beginPath(); g.moveTo(x + r, y);
+  g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+}
+// рисует картинку карьеры в текущем состоянии (раскрытые клубы + открытые буквы)
+function drawHelpImage(p, revealed, opened) {
+  return new Promise(resolve => {
+    const W = 920, padX = 40, headH = 100, colH = 36, rowH = 54, nameH = 110, footH = 54;
+    const rows = p.c.slice(0, Math.min(revealed, p.c.length));
+    const H = headH + colH + rows.length * rowH + nameH + footH;
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const g = cv.getContext('2d');
+    const C = { bg: '#0e1420', row: '#182236', text: '#e8edf5', muted: '#8494ab', gold: '#ffc24b', green: '#00a86b', blue: '#6fc2ff', red: '#e05656', border: '#223049', open: '#1d3a2c' };
+    g.fillStyle = C.bg; g.fillRect(0, 0, W, H);
+    g.textBaseline = 'alphabetic';
+    g.fillStyle = C.gold; g.font = 'bold 36px "Segoe UI",Arial,sans-serif';
+    g.fillText('⚽ Кто этот футболист?', padX, 58);
+    g.fillStyle = C.muted; g.font = '21px "Segoe UI",Arial'; g.fillText('Угадай по карьере', padX, 88);
+    const cSeason = padX, cClub = padX + 150, cGamesR = W - padX - 120, cGoalR = W - padX - 20;
+    let y = headH;
+    g.fillStyle = C.muted; g.font = 'bold 16px "Segoe UI",Arial';
+    g.fillText('СЕЗОН', cSeason, y + 24); g.fillText('КОМАНДА', cClub, y + 24);
+    g.textAlign = 'right'; g.fillText('М', cGamesR, y + 24); g.fillText('Г', cGoalR, y + 24); g.textAlign = 'left';
+    y += colH;
+    rows.forEach((r, i) => {
+      const [span, club, , league, , games, goals] = r;
+      if (i % 2 === 0) { g.fillStyle = C.row; g.fillRect(padX - 12, y, W - 2 * (padX - 12), rowH); }
+      g.fillStyle = C.muted; g.font = '18px "Segoe UI",Arial'; g.fillText(span, cSeason, y + 33);
+      g.fillStyle = C.text; g.font = 'bold 20px "Segoe UI",Arial';
+      let cn = club, maxW = cGamesR - 60 - cClub;
+      while (g.measureText(cn).width > maxW && cn.length > 4) cn = cn.slice(0, -2);
+      if (cn !== club) cn += '…';
+      g.fillText(cn, cClub, league ? y + 26 : y + 33);
+      if (league) { g.fillStyle = C.muted; g.font = '15px "Segoe UI",Arial'; g.fillText(league, cClub, y + 46); }
+      g.textAlign = 'right';
+      g.fillStyle = C.text; g.font = 'bold 19px "Segoe UI",Arial'; g.fillText(String(games), cGamesR, y + 33);
+      const conceded = typeof goals === 'number' && goals < 0;
+      g.fillStyle = conceded ? C.red : C.blue; g.fillText(String(goals), cGoalR, y + 33);
+      g.textAlign = 'left';
+      y += rowH;
+    });
+    y += 30;
+    const name = [...p.n];
+    const bw = Math.max(26, Math.min(46, (W - 2 * padX) / name.length - 6)), bh = bw * 1.25, gap = 6;
+    const totalW = name.reduce((a, ch) => a + ((ch === ' ' || ch === '-') ? bw * 0.4 : bw) + gap, 0) - gap;
+    let x = (W - totalW) / 2;
+    name.forEach((ch, i) => {
+      if (ch === ' ' || ch === '-') { x += bw * 0.4 + gap; return; }
+      const isOpen = opened.includes(i);
+      g.fillStyle = isOpen ? C.open : C.row; g.strokeStyle = isOpen ? C.green : C.border; g.lineWidth = 2;
+      roundRectPath(g, x, y, bw, bh, 8); g.fill(); g.stroke();
+      if (isOpen) { g.fillStyle = C.text; g.font = 'bold ' + Math.floor(bh * 0.5) + 'px "Segoe UI",Arial'; g.textAlign = 'center'; g.fillText(ch.toUpperCase(), x + bw / 2, y + bh * 0.68); g.textAlign = 'left'; }
+      x += bw + gap;
+    });
+    g.fillStyle = C.muted; g.font = '19px "Segoe UI",Arial'; g.textAlign = 'center';
+    g.fillText('Помоги угадать · azalfakk.github.io/career-quiz', W / 2, H - 22); g.textAlign = 'left';
+    cv.toBlob(b => resolve(b), 'image/png');
+  });
+}
+async function shareHelp() {
+  if (!cur) { toast('Сначала открой игрока'); return; }
+  const url = PAGE_URL + '?help=' + cur.id + '.' + revealedRows + '.' + openedIdx.join('-');
+  const text = 'Помоги угадать футболиста по карьере! 🤔⚽';
+  let blob = null;
+  try { blob = await drawHelpImage(cur, revealedRows, openedIdx); } catch (e) {}
+  if (blob && navigator.canShare) {
+    const file = new File([blob], 'career.png', { type: 'image/png' });
+    if (navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], text: text + '\n' + url }); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+  }
+  // фолбэк: ссылка через Telegram — получатель откроет карьеру в том же состоянии
+  shareTg(text, url);
+  if (blob) { try { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'career.png'; a.click(); } catch (e) {} }
+  toast('Отправь ссылку другу — он увидит эту карьеру');
+}
+$('helpBtn').onclick = shareHelp;
+
+function parseHelpLink() {
+  const h = new URLSearchParams(location.search).get('help');
+  if (!h) return null;
+  const [id, rev, op] = h.split('.');
+  return { id: +id, rev: +rev || 1, opened: op ? op.split('-').map(Number).filter(x => !isNaN(x)) : [] };
+}
+function openHelp(hp) {
+  const p = PLAYERS.find(x => x.id === hp.id);
+  if (!p) { show('scrMain'); return; }
+  mode = 'help'; cur = p;
+  openedIdx = hp.opened; revealedRows = Math.max(1, Math.min(hp.rev, p.c.length)); finished = false;
+  syncTopBar(); hideMenu(); render();
+  $('helpBanner').style.display = '';
+  $('helpBanner').innerHTML = '🆘 <b>Друг просит помощь!</b> Узнаёшь футболиста? Введи фамилию или жми «Показать ответ», чтобы подсказать.';
+}
+
 // ---------- обычная игра ----------
 function pool() { return difficulty && difficulty !== 'all' ? PLAYERS.filter(p => p.d === difficulty) : PLAYERS; }
 function pick() {
@@ -556,6 +675,24 @@ function pick() {
   }
   return ids[Math.floor(Math.random() * ids.length)];
 }
+// сохранение текущей партии обычного режима (игрок, открытые буквы, раскрытые клубы)
+function saveGame() {
+  if (mode !== 'normal' || !cur) return;
+  store.set('game', { id: cur.id, opened: openedIdx.slice(), revealed: revealedRows, finished });
+}
+function restoreGame() {
+  const g = store.get('game', null);
+  if (!g || g.finished || !difficulty) return false; // завершённые не восстанавливаем
+  const p = PLAYERS.find(x => x.id === g.id);
+  if (!p) return false;
+  mode = 'normal'; cur = p;
+  openedIdx = Array.isArray(g.opened) ? g.opened : [];
+  revealedRows = g.revealed || 1;
+  finished = false;
+  syncTopBar(); render();
+  return true;
+}
+
 const CREST1 = id => `https://tmssl.akamaized.net/images/wappen/head/${id}.png`;
 const CREST2 = id => `https://tmssl.akamaized.net/images/wappen/normquad/${id}.png`;
 const FLAG = cc => `https://flagcdn.com/w20/${cc}.png`;
@@ -573,23 +710,24 @@ function careerRow(r, idx) {
     : `<span class="crest ph">⚽</span>`;
   const lg = league
     ? `<span class="lg">${cc ? `<img src="${FLAG(cc)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}${league}</span>` : '';
-  return `<div class="crow" style="--i:${idx}"><span class="season">${span}</span><span class="club">${crest}<span class="cinfo"><b>${club}</b>${lg}</span></span><span class="num">${games}</span><span class="num goals">${goals}</span></div>`;
+  const conceded = typeof goals === 'number' && goals < 0;
+  return `<div class="crow" style="--i:${idx}"><span class="season">${span}</span><span class="club">${crest}<span class="cinfo"><b>${club}</b>${lg}</span></span><span class="num">${games}</span><span class="num goals${conceded ? ' conceded' : ''}">${goals}</span></div>`;
 }
 window.crestFallback = function (img) {
   if (img.dataset.alt) { img.src = img.dataset.alt; img.dataset.alt = ''; }
   else img.outerHTML = '<span class="crest ph">⚽</span>';
 };
 function renderCareer() {
-  const progressive = mode === 'normal' && !finished;
-  const vis = progressive ? Math.min(revealedRows, cur.c.length) : cur.c.length;
+  const limited = (mode === 'normal' || mode === 'help') && !finished;
+  const vis = limited ? Math.min(revealedRows, cur.c.length) : cur.c.length;
   let h = cur.c.slice(0, vis).map(careerRow).join('');
   const hidden = cur.c.length - vis;
-  if (hidden > 0) {
+  if (hidden > 0 && mode === 'normal') {
     h += `<button class="crow lockedRow" id="revealBtn">🔒 Показать следующий клуб (ещё ${hidden}) — награда снизится до 🪙 ${Math.max(5, rewardNow() - 5)}</button>`;
   }
   $('rows').innerHTML = h;
   const rb = $('revealBtn');
-  if (rb) rb.onclick = () => { revealedRows++; renderCareer(); updateRewardLabel(); };
+  if (rb) rb.onclick = () => { revealedRows++; renderCareer(); updateRewardLabel(); saveGame(); };
 }
 function updateRewardLabel() {
   if (mode !== 'normal' || finished) { $('rewardLabel').textContent = ''; return; }
@@ -603,7 +741,7 @@ function renderPhoto() {
   img.src = cur.img;
   photoOpen = false;
   img.classList.toggle('blurred', !finished);
-  $('photoBtn').style.display = (finished || mode === 'duel') ? 'none' : '';
+  $('photoBtn').style.display = (finished || mode === 'duel' || mode === 'help') ? 'none' : '';
 }
 $('photoBtn').onclick = () => {
   if (photoOpen || finished) return;
@@ -621,7 +759,13 @@ $('photoBtn').onclick = () => {
 };
 
 function render() {
-  revealedRows = 1;
+  $('backTop').style.display = '';
+  $('goalsHead').textContent = cur.gk ? '🧤' : 'Голы';
+  $('gkNote').style.display = cur.gk ? '' : 'none';
+  const fast = (mode === 'comp' || mode === 'duel');
+  $('reportBtn').style.display = (fast || mode === 'help') ? 'none' : '';
+  $('helpBtn').style.display = (mode === 'normal' || mode === 'daily') ? '' : 'none';
+  if (mode !== 'help') $('helpBanner').style.display = 'none';
   renderCareer();
   renderBoxes();
   renderPhoto();
@@ -630,12 +774,14 @@ function render() {
   $('reveal').style.display = 'none';
   $('guess').value = ''; $('guess').disabled = false;
   $('checkBtn').disabled = false;
-  $('nextBtn').style.display = 'none';
+  $('nextBtn').style.display = 'none'; $('nextBtn').textContent = 'Следующий игрок ➜';
   $('giveBtn').style.display = 'block';
   progress(); updateStats();
-  if (mode === 'comp' || mode === 'duel') $('guess').focus();
+  if (fast || mode === 'help') $('guess').focus();
+  if (mode === 'normal') saveGame();
 }
 function progress() {
+  if (mode === 'help') { $('progress').textContent = '🆘 Помоги другу узнать игрока'; return; }
   if (mode === 'comp') { $('progress').textContent = 'Соревновательный режим'; return; }
   if (mode === 'duel') { $('progress').textContent = '⚔️ Дуэль'; return; }
   if (mode === 'daily') { $('progress').textContent = '🌟 Игрок дня'; return; }
@@ -652,11 +798,11 @@ function renderBoxes() {
     const d = document.createElement('div');
     if (ch === ' ' || ch === '-') d.className = 'lbox space';
     else if (openedIdx.includes(i) || finished) { d.className = 'lbox open'; d.textContent = ch.toUpperCase(); }
-    else if (mode === 'comp' || mode === 'duel') d.className = 'lbox locked';
+    else if (mode === 'comp' || mode === 'duel' || mode === 'help') d.className = 'lbox locked';
     else { d.className = 'lbox'; d.onclick = () => buyLetter(i); }
     el.appendChild(d);
   });
-  $('hintCost').innerHTML = (finished || mode === 'comp' || mode === 'duel') ? '' :
+  $('hintCost').innerHTML = (finished || mode === 'comp' || mode === 'duel' || mode === 'help') ? '' :
     `Открыть букву — <b>🪙 ${letterCost()}</b>`;
 }
 function buyLetter(i) {
@@ -665,7 +811,7 @@ function buyLetter(i) {
   const doIt = () => {
     coins -= cost; openedIdx.push(i);
     store.set('coins', coins);
-    renderBoxes(); updateStats();
+    renderBoxes(); updateStats(); saveGame();
   };
   if (tg && tg.showConfirm) tg.showConfirm(`Открыть букву за ${cost} монет?`, ok => ok && doIt());
   else if (confirm(`Открыть букву за ${cost} монет?`)) doIt();
@@ -687,7 +833,9 @@ function finishRound() {
   $('guess').disabled = true; $('checkBtn').disabled = true;
   $('giveBtn').style.display = 'none';
   $('nextBtn').style.display = 'block';
+  $('helpBtn').style.display = 'none';
   progress();
+  if (mode === 'normal') saveGame();
 }
 function check() {
   if (finished || !cur) return;
@@ -708,6 +856,14 @@ function check() {
       fb.className = 'feedback ok'; fb.textContent = `✅ ${cur.full}!`;
       if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
       setTimeout(() => duelAnswer(true), 500);
+      return;
+    }
+    if (mode === 'help') {
+      confetti();
+      fb.className = 'feedback ok'; fb.textContent = `✅ Это ${cur.full}! Подскажи другу 🙌`;
+      reveal(); finishRound();
+      $('nextBtn').textContent = '🎮 Играть самому';
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
       return;
     }
     // normal / daily
@@ -742,6 +898,13 @@ function check() {
 }
 function giveUp() {
   if (finished || !cur) return;
+  if (mode === 'help') { // в режиме помощи «Сдаться» = показать ответ, чтобы подсказать другу
+    const fb = $('feedback');
+    fb.className = 'feedback ok'; fb.textContent = `Это ${cur.full} — скажи другу!`;
+    reveal(); finishRound();
+    $('nextBtn').textContent = '🎮 Играть самому';
+    return;
+  }
   if (mode === 'comp') { if (compTimer) compNext(); return; }
   if (mode === 'duel') { duelAnswer(false); return; }
   if (mode === 'daily') {
@@ -758,7 +921,7 @@ function giveUp() {
   solved.push(cur.id); store.set('solvedIds', solved);
   reveal(); finishRound(); updateStats();
 }
-function next() { mode = 'normal'; syncTopBar(); cur = pick(); openedIdx = []; finished = false; render(); }
+function next() { mode = 'normal'; syncTopBar(); cur = pick(); openedIdx = []; revealedRows = 1; finished = false; render(); }
 function updateStats() {
   $('coins').textContent = coins;
   $('streak').textContent = winStreak;
@@ -775,17 +938,71 @@ $('checkBtn').onclick = check;
 $('guess').addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
 $('nextBtn').onclick = next;
 $('giveBtn').onclick = () => {
-  if (mode === 'comp' || mode === 'duel') { giveUp(); return; }
+  if (mode === 'comp' || mode === 'duel' || mode === 'help') { giveUp(); return; }
   const msg = mode === 'daily' ? 'Сдаться? Стрик игрока дня сгорит.' : 'Сдаться? Серия побед сгорит.';
   if (tg && tg.showConfirm) tg.showConfirm(msg, ok => ok && giveUp());
   else if (confirm(msg)) giveUp();
 };
 
+// ---------- отчёты об ошибках ----------
+const REPORTS_URL = 'https://jsonblob.com/api/jsonBlob/019f903c-be40-763b-bbe5-afb287fb1099';
+$('reportBtn').onclick = () => {
+  if (!cur) { toast('Сначала открой игрока'); return; }
+  $('reportPlayer').innerHTML = `Игрок: <b>${esc(cur.full)}</b> <span style="color:var(--muted)">(${esc(cur.en)})</span>`;
+  $('reportText').value = '';
+  show('scrReport');
+};
+$('reportCancel').onclick = () => hideMenu();
+$('reportSend').onclick = async () => {
+  const txt = $('reportText').value.trim();
+  if (!txt) { toast('Напиши, что не так 🙂'); return; }
+  const who = me();
+  const rep = { id: cur ? cur.id : null, player: cur ? cur.full : '', en: cur ? cur.en : '',
+    text: txt.slice(0, 500), user: who.name, ts: Date.now() };
+  const btn = $('reportSend'); btn.disabled = true;
+  try {
+    let arr = [];
+    try { const r = await fetch(REPORTS_URL, { cache: 'no-store' }); const j = await r.json(); arr = Array.isArray(j.reports) ? j.reports : []; } catch (e) {}
+    arr.unshift(rep); arr = arr.slice(0, 500);
+    await fetch(REPORTS_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reports: arr }) });
+    toast('Спасибо! Отчёт отправлен 🙌');
+  } catch (e) {
+    const loc = store.get('localReports', []); loc.unshift(rep); store.set('localReports', loc);
+    toast('Нет сети — сохранил локально');
+  }
+  btn.disabled = false;
+  hideMenu();
+};
+// админ-просмотр отчётов: открывается ссылкой ...?reports
+async function showReports() {
+  show('scrReports');
+  $('reportsBox').innerHTML = '<div class="sub">Загружаю…</div>';
+  let arr = [];
+  try { const r = await fetch(REPORTS_URL, { cache: 'no-store' }); const j = await r.json(); arr = Array.isArray(j.reports) ? j.reports : []; } catch (e) {}
+  if (!arr.length) { $('reportsBox').innerHTML = '<div class="sub">Отчётов пока нет.</div>'; return; }
+  $('reportsBox').innerHTML = `<div class="sub">Всего: ${arr.length}</div>` + arr.map(r => {
+    const d = new Date(r.ts);
+    const when = d.toLocaleDateString('ru') + ' ' + d.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+    return `<div class="reportRow"><div><div><b>${esc(r.player || '—')}</b> <span class="rp-when">· ${esc(r.user || '')} · ${when}</span></div><div class="rp-txt">${esc(r.text || '')}</div></div></div>`;
+  }).join('');
+}
+$('reportsClose').onclick = () => { if (difficulty && cur) hideMenu(); else show('scrMain'); };
+
 // ---------- запуск ----------
 window.__check = checkGuess;
 syncTopBar();
-if (difficulty) next();
+const helpLink = parseHelpLink();
 const incomingDuel = parseDuelLink();
-if (incomingDuel) openDuelIntro(incomingDuel);
-else show('scrMain');
+if (helpLink) {
+  openHelp(helpLink);
+} else if (incomingDuel) {
+  if (difficulty) next();
+  openDuelIntro(incomingDuel);
+} else if (difficulty && restoreGame()) {
+  hideMenu(); // продолжаем сохранённую партию сразу, без меню
+} else {
+  if (difficulty) next();
+  show('scrMain');
+}
+if (new URLSearchParams(location.search).has('reports')) showReports();
 checkAch();

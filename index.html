@@ -36,7 +36,10 @@
 body { background: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100vh; padding-bottom: 30px; transition: background .25s; }
 button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; padding: 12px 16px; font-family: inherit; }
 .top { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(--panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
-.top .title { font-weight: 700; font-size: 15px; }
+.titleWrap { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.top .title { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.backTop { background: var(--row); border: 1px solid var(--border); color: var(--text); width: 32px; height: 32px; padding: 0; border-radius: 9px; font-size: 22px; line-height: 1; display: flex; align-items: center; justify-content: center; flex: none; }
+.backTop:hover { border-color: var(--accent); }
 .stats { display: flex; gap: 10px; font-size: 14px; font-weight: 700; align-items: center; }
 .coin { color: var(--gold); } .fire { color: #ff8c42; }
 .timer { color: var(--blue); font-variant-numeric: tabular-nums; }
@@ -64,6 +67,7 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
 .crow .cinfo .lg img { width: 14px; height: 10px; border-radius: 2px; }
 .crow .num { text-align: center; font-weight: 600; }
 .crow .goals { color: var(--blue); }
+.crow .goals.conceded { color: var(--red); }
 .lockedRow { display: block; width: 100%; text-align: center; background: var(--chip); color: var(--muted); font-size: 12.5px; font-weight: 600; padding: 11px; border-radius: 0; border-top: 1px dashed var(--border); }
 .lockedRow:hover { color: var(--text); }
 .rewardLabel { text-align: center; color: var(--muted); font-size: 12.5px; margin-bottom: 10px; }
@@ -88,6 +92,10 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
 #guess:focus { border-color: var(--accent); }
 .btn-check { background: var(--accent); color: #fff; }
 .btn-give { background: var(--row); color: var(--muted); width: 100%; margin-top: 6px; font-size: 13px; padding: 10px; }
+.btn-help { background: var(--chip); color: var(--blue); border: 1px solid var(--border); width: 100%; margin-top: 8px; font-size: 13.5px; padding: 11px; }
+.btn-help:hover { border-color: var(--blue); }
+.helpBanner { background: linear-gradient(180deg, var(--chip), var(--panel)); border: 1px solid var(--blue); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; font-size: 13.5px; text-align: center; }
+.helpBanner b { color: var(--blue); }
 .btn-next { background: var(--gold); color: #201500; width: 100%; margin-top: 10px; display: none; }
 .feedback { text-align: center; min-height: 22px; font-size: 14px; font-weight: 600; margin: 8px 0; }
 .feedback.ok { color: var(--accent); } .feedback.bad { color: var(--red); } .feedback.close { color: var(--gold); }
@@ -98,6 +106,17 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 26px; background: var(--chip); border: 1px solid var(--border); color: var(--text); padding: 10px 18px; border-radius: 12px; font-size: 14px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 40; max-width: 92vw; text-align: center; }
 .toast.show { opacity: 1; }
 .progress { text-align: center; color: var(--muted); font-size: 12px; margin-top: 14px; }
+.reportLink { display: block; margin: 12px auto 0; background: transparent; border: none; color: var(--muted); font-size: 12px; font-weight: 600; opacity: .8; text-decoration: underline; }
+.reportLink:hover { color: var(--red); }
+.gkNote { text-align: center; color: var(--muted); font-size: 11.5px; margin-top: 6px; }
+.gkNote b { color: var(--red); }
+textarea { width: 100%; min-height: 90px; padding: 11px 13px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; font-family: inherit; outline: none; resize: vertical; }
+textarea:focus { border-color: var(--accent); }
+.reportPlayer { background: var(--row); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-bottom: 10px; }
+.reportPlayer b { color: var(--text); }
+.reportRow { display: flex; align-items: flex-start; gap: 10px; background: var(--row); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; font-size: 12.5px; }
+.reportRow .rp-when { color: var(--muted); font-size: 11px; }
+.reportRow .rp-txt { margin-top: 3px; }
 #fx { position: fixed; inset: 0; pointer-events: none; z-index: 50; display: none; }
 /* overlay */
 .overlay { position: fixed; inset: 0; background: rgba(8, 12, 20, .88); z-index: 20; display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; }
@@ -164,7 +183,10 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
 </head>
 <body>
 <div class="top">
-  <div class="title">⚽ Угадай по карьере</div>
+  <div class="titleWrap">
+    <button class="backTop" id="backTop" aria-label="Назад" style="display:none">‹</button>
+    <div class="title">⚽ Угадай по карьере</div>
+  </div>
   <div class="stats">
     <button class="diffBtn" id="menuBtn">Меню</button>
     <span id="statNormal"><span class="coin">🪙 <span id="coins">0</span></span> <span class="fire">🔥 <span id="streak">0</span></span></span>
@@ -173,11 +195,13 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
   </div>
 </div>
 <div class="wrap">
+  <div class="helpBanner" id="helpBanner" style="display:none"></div>
   <div class="career">
-    <div class="head"><span>Сезон</span><span>Команда</span><span>Матчи</span><span>Голы</span></div>
+    <div class="head"><span>Сезон</span><span>Команда</span><span>Матчи</span><span id="goalsHead">Голы</span></div>
     <div id="rows"></div>
   </div>
   <div class="rewardLabel" id="rewardLabel"></div>
+  <div class="gkNote" id="gkNote" style="display:none">🧤 вратарь — в колонке <b>пропущенные</b> мячи</div>
   <div class="mid">
     <div class="photoBox" id="photoBox" style="display:none">
       <img id="photoImg" class="blurred" alt="">
@@ -193,8 +217,10 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
   <div class="feedback" id="feedback"></div>
   <div class="reveal" id="reveal"><img id="rimg" alt=""><div><div class="rn" id="rname"></div><div class="rd" id="rdesc"></div></div></div>
   <button class="btn-next" id="nextBtn">Следующий игрок ➜</button>
+  <button class="btn-help" id="helpBtn">🆘 Не знаю — спросить друга</button>
   <button class="btn-give" id="giveBtn">Сдаться (серия сгорит)</button>
   <div class="progress" id="progress"></div>
+  <button class="reportLink" id="reportBtn">⚠️ Сообщить об ошибке в карьере</button>
 </div>
 <div class="toast" id="toast"></div>
 <canvas id="fx"></canvas>
@@ -277,6 +303,21 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
     <button class="dopt big" id="duelStart" style="justify-content:center"><span class="emoji">▶️</span><span style="font-weight:800">Начать дуэль</span></button>
     <button class="backBtn" id="backDuel">← Назад</button>
   </div>
+  <!-- сообщить об ошибке -->
+  <div class="dcard" id="scrReport" style="display:none">
+    <h2>⚠️ Сообщить об ошибке</h2>
+    <div class="sub">Что не так с карьерой этого игрока? Опиши — и я поправлю данные.</div>
+    <div class="reportPlayer" id="reportPlayer"></div>
+    <textarea id="reportText" placeholder="Например: не хватает клуба «Мольде», или неверные голы за «Челси»…"></textarea>
+    <button class="dopt big" id="reportSend" style="justify-content:center;margin-top:10px"><span class="emoji">📨</span><span style="font-weight:800">Отправить</span></button>
+    <button class="backBtn" id="reportCancel">← Отмена</button>
+  </div>
+  <!-- админ: список отчётов -->
+  <div class="dcard" id="scrReports" style="display:none">
+    <h2>📋 Отчёты об ошибках</h2>
+    <div id="reportsBox"></div>
+    <button class="backBtn" id="reportsClose" style="margin-top:10px">← Закрыть</button>
+  </div>
   <!-- результат дуэли -->
   <div class="dcard" id="scrDuelEnd" style="display:none">
     <h2>⚔️ Дуэль окончена</h2>
@@ -287,7 +328,7 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
   </div>
 </div>
 
-<script src="players.js?v=4"></script>
-<script src="app.js?v=4"></script>
+<script src="players.js?v=5"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
