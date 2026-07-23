@@ -7,27 +7,38 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root {
-  --bg: #0e1420; --panel: #141c2b; --row: #182236; --row2: #141c2b;
+  --bg: #0e1420; --panel: #141c2b; --row: #182236; --row-h: #1c2a44;
   --text: #e8edf5; --muted: #8494ab; --accent: #00a86b; --gold: #ffc24b;
-  --red: #e05656; --border: #223049; --blue: #6fc2ff;
+  --red: #e05656; --border: #223049; --blue: #6fc2ff; --chip: #1d2a40;
+  --ok-bg: #1d3a2c;
+}
+:root.light {
+  --bg: #eef2f7; --panel: #ffffff; --row: #f4f7fb; --row-h: #e9eef6;
+  --text: #16202e; --muted: #61708a; --accent: #009a62; --gold: #d99a00;
+  --red: #d84c4c; --border: #d9e1ec; --blue: #2f8fd6; --chip: #e8edf5;
+  --ok-bg: #d9f2e4;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100vh; padding-bottom: 30px; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100vh; padding-bottom: 30px; transition: background .25s; }
+button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; padding: 12px 16px; font-family: inherit; }
 .top { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(--panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
 .top .title { font-weight: 700; font-size: 15px; }
 .stats { display: flex; gap: 10px; font-size: 14px; font-weight: 700; align-items: center; }
 .coin { color: var(--gold); } .fire { color: #ff8c42; }
 .timer { color: var(--blue); font-variant-numeric: tabular-nums; }
-.timer.low { color: var(--red); }
+.timer.low { color: var(--red); animation: pulse 1s infinite; }
 .score { color: var(--accent); }
+@keyframes pulse { 50% { opacity: .45; } }
 .diffBtn { border: 1px solid var(--border); background: var(--row); color: var(--muted); border-radius: 999px; font-size: 12px; font-weight: 700; padding: 5px 10px; cursor: pointer; }
 .diffBtn.easy { color: var(--accent); border-color: var(--accent); }
 .diffBtn.medium { color: var(--gold); border-color: var(--gold); }
 .diffBtn.hard { color: var(--red); border-color: var(--red); }
 .wrap { max-width: 560px; margin: 0 auto; padding: 12px; }
-.career { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+.career { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 10px; }
 .career .head { display: grid; grid-template-columns: 84px 1fr 44px 44px; padding: 8px 12px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); }
-.crow { display: grid; grid-template-columns: 84px 1fr 44px 44px; padding: 9px 12px; font-size: 13px; align-items: center; }
+.crow { display: grid; grid-template-columns: 84px 1fr 44px 44px; padding: 9px 12px; font-size: 13px; align-items: center; animation: rowIn .35s both; animation-delay: calc(var(--i, 0) * 70ms); }
+@keyframes rowIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .crow { animation: none; } }
 .crow:nth-child(odd) { background: var(--row); }
 .crow .season { color: var(--muted); font-size: 12px; }
 .crow .club { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -39,17 +50,28 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, "S
 .crow .cinfo .lg img { width: 14px; height: 10px; border-radius: 2px; }
 .crow .num { text-align: center; font-weight: 600; }
 .crow .goals { color: var(--blue); }
-.name-boxes { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin: 16px 0 6px; }
+.lockedRow { display: block; width: 100%; text-align: center; background: var(--chip); color: var(--muted); font-size: 12.5px; font-weight: 600; padding: 11px; border-radius: 0; border-top: 1px dashed var(--border); }
+.lockedRow:hover { color: var(--text); }
+.rewardLabel { text-align: center; color: var(--muted); font-size: 12.5px; margin-bottom: 10px; }
+.rewardLabel b { color: var(--gold); }
+.mid { display: flex; gap: 14px; align-items: center; justify-content: center; margin: 12px 0 6px; }
+.photoBox { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.photoBox img { width: 74px; height: 74px; border-radius: 50%; object-fit: cover; background: var(--row); border: 2px solid var(--border); transition: filter .4s; }
+.photoBox img.blurred { filter: blur(9px) saturate(.8); }
+.photoBox .photoBtn { font-size: 11px; padding: 5px 9px; background: var(--chip); color: var(--gold); border: 1px solid var(--border); border-radius: 999px; }
+.name-boxes { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
 .lbox { width: 30px; height: 38px; border-radius: 7px; background: var(--row); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; cursor: pointer; user-select: none; }
-.lbox.open { background: #1d3a2c; border-color: var(--accent); cursor: default; }
+.lbox.open { background: var(--ok-bg); border-color: var(--accent); cursor: default; animation: flip .4s; }
+@keyframes flip { from { transform: rotateX(90deg); } to { transform: rotateX(0); } }
 .lbox.space { width: 12px; background: transparent; border: none; cursor: default; }
 .lbox.locked { cursor: default; }
-.hint-cost { text-align: center; color: var(--muted); font-size: 12px; margin-bottom: 12px; }
+.hint-cost { text-align: center; color: var(--muted); font-size: 12px; margin: 6px 0 12px; }
 .hint-cost b { color: var(--gold); }
 .guess-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.guess-row.shake { animation: shake .4s; }
+@keyframes shake { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-7px); } 40%,80% { transform: translateX(7px); } }
 #guess { flex: 1; padding: 12px 14px; font-size: 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--panel); color: var(--text); outline: none; }
 #guess:focus { border-color: var(--accent); }
-button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; padding: 12px 16px; }
 .btn-check { background: var(--accent); color: #fff; }
 .btn-give { background: var(--row); color: var(--muted); width: 100%; margin-top: 6px; font-size: 13px; padding: 10px; }
 .btn-next { background: var(--gold); color: #201500; width: 100%; margin-top: 10px; display: none; }
@@ -59,18 +81,20 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
 .reveal img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: var(--row); }
 .reveal .rn { font-weight: 700; font-size: 15px; }
 .reveal .rd { color: var(--muted); font-size: 12px; }
-.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 26px; background: #1d2a40; border: 1px solid var(--border); color: var(--text); padding: 10px 18px; border-radius: 12px; font-size: 14px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 30; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 26px; background: var(--chip); border: 1px solid var(--border); color: var(--text); padding: 10px 18px; border-radius: 12px; font-size: 14px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 40; max-width: 92vw; text-align: center; }
 .toast.show { opacity: 1; }
 .progress { text-align: center; color: var(--muted); font-size: 12px; margin-top: 14px; }
-/* overlay + menu screens */
-.overlay { position: fixed; inset: 0; background: rgba(8, 12, 20, .88); z-index: 20; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+#fx { position: fixed; inset: 0; pointer-events: none; z-index: 50; display: none; }
+/* overlay */
+.overlay { position: fixed; inset: 0; background: rgba(8, 12, 20, .88); z-index: 20; display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; }
+:root.light .overlay { background: rgba(40, 50, 66, .55); }
 .overlay.hidden { display: none; }
-.dcard { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 22px 18px; width: 100%; max-width: 400px; }
+.dcard { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 22px 18px; width: 100%; max-width: 420px; margin: auto 0; }
 .dcard h2 { font-size: 17px; text-align: center; margin-bottom: 4px; }
-.dcard .sub { text-align: center; color: var(--muted); font-size: 12.5px; margin-bottom: 16px; line-height: 1.45; }
-.dopt { display: flex; align-items: center; gap: 12px; width: 100%; background: var(--row); border: 1px solid var(--border); border-radius: 12px; padding: 13px 14px; margin-bottom: 10px; cursor: pointer; text-align: left; color: var(--text); font-size: 14px; }
+.dcard .sub { text-align: center; color: var(--muted); font-size: 12.5px; margin-bottom: 14px; line-height: 1.5; }
+.dopt { display: flex; align-items: center; gap: 12px; width: 100%; background: var(--row); border: 1px solid var(--border); border-radius: 12px; padding: 13px 14px; margin-bottom: 9px; cursor: pointer; text-align: left; color: var(--text); font-size: 14px; }
 .dopt:hover { border-color: var(--accent); }
-.dopt.big { padding: 16px 14px; font-size: 15px; }
+.dopt.big { padding: 15px 14px; font-size: 15px; }
 .dopt .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
 .dopt .emoji { font-size: 20px; flex: none; }
 .dopt small { display: block; color: var(--muted); font-weight: 400; font-size: 11.5px; margin-top: 2px; }
@@ -89,10 +113,39 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
 .lrow .pos { width: 26px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .lrow .nm { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lrow .sc { font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
-.lrow.me { outline: 1px solid var(--accent); background: #14301f; }
+.lrow.me { outline: 1px solid var(--accent); background: var(--ok-bg); }
+.nickCrest { width: 14px; height: 14px; object-fit: contain; vertical-align: -2px; }
 .bigScore { text-align: center; font-size: 40px; font-weight: 800; color: var(--gold); margin: 8px 0 2px; }
 .lboard { max-height: 260px; overflow-y: auto; margin: 8px 0; }
 .lnote { text-align: center; color: var(--muted); font-size: 11.5px; margin-top: 8px; }
+/* кто дороже */
+.priceCards { display: flex; gap: 10px; margin: 12px 0; }
+.pcard { flex: 1; background: var(--row); border: 2px solid var(--border); border-radius: 14px; padding: 14px 8px; text-align: center; cursor: pointer; transition: border-color .2s, transform .15s; }
+.pcard:hover { transform: translateY(-2px); }
+.pcard.right { border-color: var(--accent); background: var(--ok-bg); }
+.pcard.wrong { border-color: var(--red); }
+.pphoto { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; background: var(--panel); border: 2px solid var(--border); }
+.pcName { font-weight: 700; font-size: 13.5px; margin-top: 8px; }
+.pcClub { color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+.pcVal { font-size: 17px; font-weight: 800; color: var(--gold); margin-top: 8px; min-height: 24px; font-variant-numeric: tabular-nums; }
+.pcVal:not(.revealed) { color: var(--muted); }
+.priceTop { display: flex; justify-content: center; gap: 16px; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.priceMsg { text-align: center; font-size: 13px; min-height: 20px; color: var(--muted); }
+/* ачивки */
+.achSec { font-size: 12.5px; color: var(--muted); margin: 10px 0 8px; line-height: 1.4; }
+.clubGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.clubCell { background: var(--row); border: 1px solid var(--border); border-radius: 10px; padding: 8px 4px; text-align: center; opacity: .55; }
+.clubCell.unlocked { opacity: 1; cursor: pointer; }
+.clubCell.unlocked:hover { border-color: var(--accent); }
+.clubCell.sel { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); opacity: 1; }
+.clubCrest { width: 30px; height: 30px; object-fit: contain; }
+.cc-name { font-size: 9.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
+.cc-prog { font-size: 9.5px; color: var(--muted); margin-top: 1px; }
+.achRow { display: flex; align-items: center; gap: 10px; background: var(--row); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; margin-bottom: 7px; font-size: 13px; }
+.achRow small { display: block; color: var(--muted); font-size: 11px; }
+.achRow .ai { font-size: 18px; }
+.achRow .grow { flex: 1; }
+.achRow:not(.done) { opacity: .55; }
 </style>
 </head>
 <body>
@@ -102,6 +155,7 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
     <button class="diffBtn" id="menuBtn">Меню</button>
     <span id="statNormal"><span class="coin">🪙 <span id="coins">0</span></span> <span class="fire">🔥 <span id="streak">0</span></span></span>
     <span id="statComp" style="display:none"><span class="score">✅ <span id="compScore">0</span></span> <span class="timer" id="timer">60</span></span>
+    <span id="statDuel" style="display:none"><span class="score">✅ <span id="duelScore">0</span></span> <span class="timer" id="duelProg">1/10</span></span>
   </div>
 </div>
 <div class="wrap">
@@ -109,9 +163,16 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
     <div class="head"><span>Сезон</span><span>Команда</span><span>Матчи</span><span>Голы</span></div>
     <div id="rows"></div>
   </div>
-  <div class="name-boxes" id="boxes"></div>
+  <div class="rewardLabel" id="rewardLabel"></div>
+  <div class="mid">
+    <div class="photoBox" id="photoBox" style="display:none">
+      <img id="photoImg" class="blurred" alt="">
+      <button class="photoBtn" id="photoBtn">Фото 🪙 20</button>
+    </div>
+    <div class="name-boxes" id="boxes"></div>
+  </div>
   <div class="hint-cost" id="hintCost"></div>
-  <div class="guess-row">
+  <div class="guess-row" id="guessRow">
     <input id="guess" type="text" placeholder="Фамилия игрока…" autocomplete="off">
     <button class="btn-check" id="checkBtn">✓</button>
   </div>
@@ -122,15 +183,20 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
   <div class="progress" id="progress"></div>
 </div>
 <div class="toast" id="toast"></div>
+<canvas id="fx"></canvas>
 
 <div class="overlay" id="overlay">
   <!-- главное меню -->
   <div class="dcard" id="scrMain">
     <h2>⚽ Угадай по карьере</h2>
-    <div class="sub">Угадай футболиста по списку его клубов, матчей и голов</div>
-    <button class="dopt big" id="goComp"><span class="emoji">🏆</span><span class="grow">Соревновательный режим<small>60 секунд · все игроки · таблица лидеров</small></span></button>
-    <button class="dopt big" id="goNormal"><span class="emoji">🎯</span><span class="grow">Обычный режим<small>без таймера · монеты и подсказки</small></span></button>
+    <div class="sub">Угадай футболиста по клубам, матчам и голам</div>
+    <button class="dopt big" id="goComp"><span class="emoji">🏆</span><span class="grow">Соревновательный<small>60 секунд · таблица лидеров</small></span></button>
+    <button class="dopt big" id="goNormal"><span class="emoji">🎯</span><span class="grow">Обычный режим<small>открывай карьеру постепенно — больше монет</small></span></button>
+    <button class="dopt big" id="goDaily"><span class="emoji">🌟</span><span class="grow">Игрок дня<small>один на всех · стрик · бонусы</small></span></button>
+    <button class="dopt big" id="goPrice"><span class="emoji">💰</span><span class="grow">Кто дороже?<small>угадай, кто ценнее на рынке</small></span></button>
+    <button class="dopt big" id="goDuel"><span class="emoji">⚔️</span><span class="grow">Дуэль с другом<small>одинаковые 10 игроков — кто больше?</small></span></button>
     <button class="dopt" id="goBoard"><span class="emoji">🏅</span><span class="grow">Таблица лидеров</span></button>
+    <button class="dopt" id="goAch"><span class="emoji">🎖</span><span class="grow">Достижения и эмблемы</span></button>
     <button class="backBtn" id="backMain" style="display:none">← Назад к игре</button>
   </div>
   <!-- выбор сложности -->
@@ -143,10 +209,10 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
     <button class="dopt" data-d="all"><span class="dot" style="background:var(--blue)"></span><span class="grow">Микс<small>все игроки вперемешку</small></span><span class="cnt" id="cntAll"></span></button>
     <button class="backBtn" id="backDiff">← Назад</button>
   </div>
-  <!-- правила соревновательного -->
+  <!-- соревновательный -->
   <div class="dcard" id="scrComp" style="display:none">
     <h2>🏆 Соревновательный режим</h2>
-    <div class="sub">За <b>60 секунд</b> отгадай как можно больше футболистов.<br>Играют все 500 игроков вперемешку.<br>Подсказок нет, пропуск — без штрафа.</div>
+    <div class="sub">За <b>60 секунд</b> отгадай как можно больше.<br>Все 500 игроков вперемешку, карьера открыта сразу.<br>Подсказок нет, пропуск — без штрафа.</div>
     <button class="dopt big" id="compStart" style="justify-content:center"><span class="emoji">▶️</span><span style="font-weight:800">Старт!</span></button>
     <button class="backBtn" id="backComp">← Назад</button>
   </div>
@@ -156,6 +222,7 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
     <div class="bigScore" id="endScore">0</div>
     <div class="sub" id="endNote">игроков отгадано</div>
     <div id="endBoard"></div>
+    <button class="dopt big" id="shareComp" style="justify-content:center"><span class="emoji">📣</span><span style="font-weight:800">Похвастаться в чате</span></button>
     <button class="dopt big" id="compAgain" style="justify-content:center"><span class="emoji">🔁</span><span style="font-weight:800">Ещё раз</span></button>
     <button class="backBtn" id="endMenu">← В меню</button>
   </div>
@@ -166,452 +233,47 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
     <div id="boardBox"></div>
     <button class="backBtn" id="backBoard">← Назад</button>
   </div>
+  <!-- достижения -->
+  <div class="dcard" id="scrAch" style="display:none">
+    <h2>🎖 Достижения</h2>
+    <div id="achBox"></div>
+    <button class="backBtn" id="backAch" style="margin-top:10px">← Назад</button>
+  </div>
+  <!-- кто дороже -->
+  <div class="dcard" id="scrPrice" style="display:none">
+    <h2>💰 Кто дороже?</h2>
+    <div class="priceTop"><span class="fire">Серия: 🔥 <span id="priceStreak">0</span></span></div>
+    <div class="priceCards" id="priceCards"></div>
+    <div class="priceMsg" id="priceMsg"></div>
+    <div class="sub" style="margin-top:10px">+5 🪙 за верный ответ · серия 5 → +20 🪙 · серия 10 → +40 🪙</div>
+    <button class="backBtn" id="backPrice">← В меню</button>
+  </div>
+  <!-- игрок дня -->
+  <div class="dcard" id="scrDaily" style="display:none">
+    <h2>🌟 Игрок дня</h2>
+    <div class="sub" id="dailyInfo"></div>
+    <button class="dopt big" id="dailyStart" style="justify-content:center"><span class="emoji">▶️</span><span style="font-weight:800">Угадать игрока дня</span></button>
+    <div class="sub" id="dailyDone" style="display:none"></div>
+    <button class="backBtn" id="backDaily">← Назад</button>
+  </div>
+  <!-- дуэль -->
+  <div class="dcard" id="scrDuel" style="display:none">
+    <h2>⚔️ Дуэль</h2>
+    <div class="sub" id="duelInfo"></div>
+    <button class="dopt big" id="duelStart" style="justify-content:center"><span class="emoji">▶️</span><span style="font-weight:800">Начать дуэль</span></button>
+    <button class="backBtn" id="backDuel">← Назад</button>
+  </div>
+  <!-- результат дуэли -->
+  <div class="dcard" id="scrDuelEnd" style="display:none">
+    <h2>⚔️ Дуэль окончена</h2>
+    <div class="bigScore" id="duelEndScore">0/10</div>
+    <div class="sub" id="duelVerdict"></div>
+    <button class="dopt big" id="shareDuel" style="justify-content:center"><span class="emoji">📣</span><span style="font-weight:800">Отправить вызов</span></button>
+    <button class="backBtn" id="duelEndMenu">← В меню</button>
+  </div>
 </div>
 
-<script src="players.js"></script>
-<script>
-const tg = window.Telegram && window.Telegram.WebApp;
-if (tg) { tg.ready(); tg.expand(); }
-
-// ---------- хранилище ----------
-const store = {
-  get(k, def) { try { const v = localStorage.getItem(k); return v === null ? def : JSON.parse(v); } catch (e) { return def; } },
-  set(k, v) {
-    try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {}
-    if (tg && tg.CloudStorage) { try { tg.CloudStorage.setItem(k, JSON.stringify(v), () => {}); } catch (e) {} }
-  }
-};
-
-let coins = store.get('coins', 100);
-let winStreak = store.get('winStreak', 0);
-let solved = store.get('solvedIds', []);
-let difficulty = store.get('difficulty', null);
-let openedIdx = [];
-let cur = null;
-let finished = false;
-let mode = 'normal'; // normal | comp
-
-// comp state
-let compTime = 60, compScoreVal = 0, compTimer = null, compQueue = [];
-
-const DIFF_LABEL = { easy: 'Лёгкая', medium: 'Средняя', hard: 'Сложная', all: 'Микс' };
-
-// ---------- ежедневный бонус ----------
-(function daily() {
-  const today = new Date().toDateString();
-  const last = store.get('lastDay', '');
-  if (last === today) return;
-  const yesterday = new Date(Date.now() - 864e5).toDateString();
-  let days = store.get('dayStreak', 0);
-  days = (last === yesterday) ? days + 1 : 1;
-  const bonus = 50 + Math.min((days - 1) * 10, 50);
-  coins += bonus;
-  store.set('dayStreak', days); store.set('lastDay', today); store.set('coins', coins);
-  setTimeout(() => toast(`🎁 Ежедневный бонус: +${bonus} монет (день ${days})`), 600);
-})();
-
-// ---------- нечёткое сравнение ----------
-function normRu(s) {
-  return s.toLowerCase().replace(/ё/g, 'е').replace(/й/g, 'и').replace(/[^а-яе]/g, '');
-}
-function normEn(s) {
-  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ø/g, 'o').replace(/[^a-z]/g, '');
-}
-function lev(a, b) {
-  if (Math.abs(a.length - b.length) > 5) return 99;
-  const m = a.length, n = b.length;
-  let prev = Array.from({length: n + 1}, (_, j) => j);
-  for (let i = 1; i <= m; i++) {
-    const row = [i];
-    for (let j = 1; j <= n; j++) {
-      row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-    }
-    prev = row;
-  }
-  return prev[n];
-}
-function threshold(len) { return len <= 4 ? 1 : len <= 7 ? 2 : len <= 10 ? 3 : 4; }
-function lastWord(s) { const p = s.trim().split(/\s+/); return p[p.length - 1]; }
-
-function checkGuess(guess, p) {
-  const isLatin = /[a-z]/i.test(guess) && !/[а-я]/i.test(guess);
-  const cands = [];
-  if (isLatin) {
-    const g = normEn(guess);
-    [p.en, lastWord(p.en)].forEach(c => cands.push([g, normEn(c)]));
-  } else {
-    const g = normRu(guess);
-    [p.n, lastWord(p.n), p.full, lastWord(p.full), ...(p.alt || []), ...(p.alt || []).map(lastWord)]
-      .forEach(c => cands.push([g, normRu(c)]));
-  }
-  let best = 99, bestLen = 1;
-  for (const [g, c] of cands) {
-    if (!c) continue;
-    const d = lev(g, c);
-    if (d - threshold(c.length) < best - threshold(bestLen)) { best = d; bestLen = c.length; }
-  }
-  if (best <= threshold(bestLen)) return 2;
-  if (best <= threshold(bestLen) + 1) return 1;
-  return 0;
-}
-
-// ---------- лидерборд ----------
-const BOARD_URL = 'https://jsonblob.com/api/jsonBlob/019f8f02-5291-78e4-9616-07a7671ed12b';
-function me() {
-  const u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
-  if (u) return { id: 'tg' + u.id, name: u.username ? '@' + u.username : [u.first_name, u.last_name].filter(Boolean).join(' ') };
-  let gid = store.get('guestId', null);
-  if (!gid) { gid = 'g' + Math.random().toString(36).slice(2, 8); store.set('guestId', gid); }
-  return { id: gid, name: 'Гость-' + gid.slice(1, 5) };
-}
-async function boardGet() {
-  const r = await fetch(BOARD_URL, { cache: 'no-store' });
-  if (!r.ok) throw new Error('board http ' + r.status);
-  const j = await r.json();
-  return Array.isArray(j.scores) ? j.scores : [];
-}
-async function boardSubmit(score) {
-  const who = me();
-  try {
-    let scores = await boardGet();
-    const mine = scores.find(x => x.id === who.id);
-    if (mine) { if (score > mine.s) { mine.s = score; mine.t = Date.now(); mine.name = who.name; } }
-    else scores.push({ id: who.id, name: who.name, s: score, t: Date.now() });
-    scores.sort((a, b) => b.s - a.s || a.t - b.t);
-    scores = scores.slice(0, 100);
-    await fetch(BOARD_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scores }) });
-    return scores;
-  } catch (e) {
-    // офлайн-фолбэк: локальная таблица
-    let scores = store.get('localBoard', []);
-    const mine = scores.find(x => x.id === who.id);
-    if (mine) { if (score > mine.s) { mine.s = score; mine.t = Date.now(); } }
-    else scores.push({ id: who.id, name: who.name, s: score, t: Date.now() });
-    scores.sort((a, b) => b.s - a.s || a.t - b.t);
-    store.set('localBoard', scores);
-    return scores;
-  }
-}
-function boardHTML(scores, highlightId) {
-  if (!scores.length) return '<div class="sub">Пока никто не играл — будь первым!</div>';
-  const medals = ['🥇', '🥈', '🥉'];
-  const top3 = scores.slice(0, 3);
-  const order = top3.length === 3 ? [top3[1], top3[0], top3[2]] : top3;
-  let h = '<div class="podium">' + order.map(p => {
-    const isFirst = p === top3[0];
-    return `<div class="pod ${isFirst ? 'first' : ''}"><div class="medal">${medals[top3.indexOf(p)]}</div><div class="pn">${esc(p.name)}</div><div class="ps">${p.s}</div></div>`;
-  }).join('') + '</div>';
-  if (scores.length > 3) {
-    h += '<div class="lboard">' + scores.slice(3, 30).map((p, i) =>
-      `<div class="lrow ${p.id === highlightId ? 'me' : ''}"><span class="pos">${i + 4}</span><span class="nm">${esc(p.name)}</span><span class="sc">${p.s}</span></div>`
-    ).join('') + '</div>';
-  }
-  const myPos = scores.findIndex(x => x.id === highlightId);
-  if (myPos >= 0) h += `<div class="lnote">Твоё место: ${myPos + 1} из ${scores.length}</div>`;
-  return h;
-}
-function esc(s) { return String(s).replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
-
-// ---------- меню ----------
-const overlay = document.getElementById('overlay');
-const screens = ['scrMain', 'scrDiff', 'scrComp', 'scrEnd', 'scrBoard'];
-function show(id) {
-  overlay.classList.remove('hidden');
-  screens.forEach(s => document.getElementById(s).style.display = s === id ? '' : 'none');
-  if (id === 'scrMain') document.getElementById('backMain').style.display = cur ? '' : 'none';
-}
-function hideMenu() { overlay.classList.add('hidden'); }
-
-document.getElementById('menuBtn').onclick = () => {
-  if (mode === 'comp' && compTimer) return; // во время раунда меню недоступно
-  show('scrMain');
-};
-document.getElementById('backMain').onclick = hideMenu;
-document.getElementById('goNormal').onclick = () => {
-  const c = { easy: 0, medium: 0, hard: 0 };
-  PLAYERS.forEach(p => c[p.d]++);
-  document.getElementById('cntEasy').textContent = c.easy;
-  document.getElementById('cntMedium').textContent = c.medium;
-  document.getElementById('cntHard').textContent = c.hard;
-  document.getElementById('cntAll').textContent = PLAYERS.length;
-  show('scrDiff');
-};
-document.getElementById('backDiff').onclick = () => show('scrMain');
-document.getElementById('goComp').onclick = () => show('scrComp');
-document.getElementById('backComp').onclick = () => show('scrMain');
-document.getElementById('compStart').onclick = startComp;
-document.getElementById('compAgain').onclick = startComp;
-document.getElementById('endMenu').onclick = () => show('scrMain');
-document.getElementById('goBoard').onclick = async () => {
-  show('scrBoard');
-  document.getElementById('boardBox').innerHTML = '<div class="sub">Загружаю…</div>';
-  let scores;
-  try { scores = await boardGet(); } catch (e) { scores = store.get('localBoard', []); }
-  document.getElementById('boardBox').innerHTML = boardHTML(scores, me().id);
-};
-document.getElementById('backBoard').onclick = () => show('scrMain');
-
-document.getElementById('scrDiff').addEventListener('click', e => {
-  const b = e.target.closest('.dopt'); if (!b || !b.dataset.d) return;
-  const prev = difficulty;
-  difficulty = b.dataset.d;
-  store.set('difficulty', difficulty);
-  updateMenuBtn();
-  hideMenu();
-  if (mode === 'comp') { stopComp(false); }
-  mode = 'normal'; syncTopBar();
-  // античит: текущий игрок не меняется при смене сложности
-  if (!cur || finished || prev === null) next();
-  else { progress(); toast('Сложность применится со следующего игрока'); }
-});
-
-function updateMenuBtn() {
-  const b = document.getElementById('menuBtn');
-  if (mode === 'comp') { b.textContent = '🏆'; b.className = 'diffBtn'; return; }
-  b.textContent = DIFF_LABEL[difficulty] || 'Меню';
-  b.className = 'diffBtn ' + (difficulty && difficulty !== 'all' ? difficulty : '');
-}
-function syncTopBar() {
-  document.getElementById('statNormal').style.display = mode === 'comp' ? 'none' : '';
-  document.getElementById('statComp').style.display = mode === 'comp' ? '' : 'none';
-  document.getElementById('giveBtn').textContent = mode === 'comp' ? 'Пропустить ➜' : 'Сдаться (серия сгорит)';
-  updateMenuBtn();
-}
-
-// ---------- соревновательный режим ----------
-function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-function startComp() {
-  mode = 'comp';
-  compTime = 60; compScoreVal = 0;
-  compQueue = shuffle([...PLAYERS]);
-  syncTopBar();
-  hideMenu();
-  document.getElementById('compScore').textContent = '0';
-  const tEl = document.getElementById('timer');
-  tEl.textContent = '60'; tEl.classList.remove('low');
-  clearInterval(compTimer);
-  compTimer = setInterval(() => {
-    compTime--;
-    tEl.textContent = compTime;
-    if (compTime <= 10) tEl.classList.add('low');
-    if (compTime <= 0) stopComp(true);
-  }, 1000);
-  compNext();
-}
-function compNext() {
-  if (!compQueue.length) compQueue = shuffle([...PLAYERS]);
-  cur = compQueue.pop();
-  openedIdx = []; finished = false;
-  render();
-}
-function stopComp(showResult) {
-  clearInterval(compTimer); compTimer = null;
-  if (!showResult) { mode = 'normal'; syncTopBar(); return; }
-  const s = compScoreVal;
-  if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
-  document.getElementById('endScore').textContent = s;
-  document.getElementById('endNote').textContent = s === 0 ? 'В следующий раз получится!' : (s === 1 ? 'игрок отгадан' : (s < 5 ? 'игрока отгадано' : 'игроков отгадано'));
-  document.getElementById('endBoard').innerHTML = '<div class="sub">Отправляю результат…</div>';
-  show('scrEnd');
-  boardSubmit(s).then(scores => {
-    document.getElementById('endBoard').innerHTML = boardHTML(scores, me().id);
-  });
-  mode = 'normal'; cur = null; syncTopBar();
-  // вернуть обычную игру под оверлеем
-  if (difficulty) next();
-}
-
-// ---------- игра ----------
-function pool() {
-  return difficulty && difficulty !== 'all' ? PLAYERS.filter(p => p.d === difficulty) : PLAYERS;
-}
-function pick() {
-  const ids = pool().filter(p => !solved.includes(p.id));
-  if (!ids.length) {
-    const poolIds = new Set(pool().map(p => p.id));
-    solved = solved.filter(id => !poolIds.has(id));
-    store.set('solvedIds', solved);
-    toast('🏆 Всё отгадано на этой сложности! Начинаем заново.');
-    return pick();
-  }
-  return ids[Math.floor(Math.random() * ids.length)];
-}
-
-const CREST1 = id => `https://tmssl.akamaized.net/images/wappen/head/${id}.png`;
-const CREST2 = id => `https://tmssl.akamaized.net/images/wappen/normquad/${id}.png`;
-const FLAG = cc => `https://flagcdn.com/w20/${cc}.png`;
-
-function careerRow(r) {
-  const [span, club, clubId, league, cc, games, goals] = r;
-  const isUrl = typeof clubId === 'string';
-  const crest = clubId
-    ? `<img class="crest" src="${isUrl ? clubId : CREST1(clubId)}" alt="" loading="lazy" data-alt="${isUrl ? '' : CREST2(clubId)}" onerror="crestFallback(this)">`
-    : `<span class="crest ph">⚽</span>`;
-  const lg = league
-    ? `<span class="lg">${cc ? `<img src="${FLAG(cc)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}${league}</span>`
-    : '';
-  return `<div class="crow"><span class="season">${span}</span><span class="club">${crest}<span class="cinfo"><b>${club}</b>${lg}</span></span><span class="num">${games}</span><span class="num goals">${goals}</span></div>`;
-}
-window.crestFallback = function (img) {
-  if (img.dataset.alt) { img.src = img.dataset.alt; img.dataset.alt = ''; }
-  else img.outerHTML = '<span class="crest ph">⚽</span>';
-};
-
-function render() {
-  const p = cur;
-  document.getElementById('rows').innerHTML = p.c.map(careerRow).join('');
-  renderBoxes();
-  document.getElementById('feedback').textContent = '';
-  document.getElementById('feedback').className = 'feedback';
-  document.getElementById('reveal').style.display = 'none';
-  document.getElementById('guess').value = '';
-  document.getElementById('guess').disabled = false;
-  document.getElementById('checkBtn').disabled = false;
-  document.getElementById('nextBtn').style.display = 'none';
-  document.getElementById('giveBtn').style.display = 'block';
-  progress();
-  updateStats();
-  if (mode === 'comp') document.getElementById('guess').focus();
-}
-
-function progress() {
-  if (mode === 'comp') { document.getElementById('progress').textContent = 'Соревновательный режим'; return; }
-  const total = pool().length;
-  const done = pool().filter(p => solved.includes(p.id)).length;
-  document.getElementById('progress').textContent =
-    `Отгадано: ${done} из ${total} · ${DIFF_LABEL[difficulty] || ''}`;
-}
-
-function letterCost() { return 5 * Math.pow(2, openedIdx.length); }
-
-function renderBoxes() {
-  const name = cur.n;
-  const el = document.getElementById('boxes');
-  el.innerHTML = '';
-  [...name].forEach((ch, i) => {
-    const d = document.createElement('div');
-    if (ch === ' ' || ch === '-') { d.className = 'lbox space'; }
-    else if (openedIdx.includes(i) || finished) { d.className = 'lbox open'; d.textContent = ch.toUpperCase(); }
-    else if (mode === 'comp') { d.className = 'lbox locked'; }
-    else {
-      d.className = 'lbox';
-      d.onclick = () => buyLetter(i);
-    }
-    el.appendChild(d);
-  });
-  document.getElementById('hintCost').innerHTML = (finished || mode === 'comp') ? '' :
-    `Нажми на клетку, чтобы открыть букву — <b>🪙 ${letterCost()}</b>`;
-}
-
-function buyLetter(i) {
-  const cost = letterCost();
-  if (coins < cost) { toast('Не хватает монет 😕 Заходи завтра за бонусом!'); return; }
-  const doIt = () => {
-    coins -= cost; openedIdx.push(i);
-    store.set('coins', coins);
-    renderBoxes(); updateStats();
-  };
-  if (tg && tg.showConfirm) tg.showConfirm(`Открыть букву за ${cost} монет?`, ok => ok && doIt());
-  else if (confirm(`Открыть букву за ${cost} монет?`)) doIt();
-}
-
-function reveal() {
-  const r = document.getElementById('reveal');
-  document.getElementById('rname').textContent = cur.full;
-  document.getElementById('rdesc').textContent = cur.en;
-  const img = document.getElementById('rimg');
-  if (cur.img) { img.src = cur.img; img.style.display = ''; } else img.style.display = 'none';
-  r.style.display = 'flex';
-}
-
-function check() {
-  if (finished || !cur) return;
-  const guess = document.getElementById('guess').value.trim();
-  if (!guess) return;
-  const res = checkGuess(guess, cur);
-  const fb = document.getElementById('feedback');
-  if (res === 2) {
-    if (mode === 'comp') {
-      compScoreVal++;
-      document.getElementById('compScore').textContent = compScoreVal;
-      fb.className = 'feedback ok';
-      fb.textContent = `✅ ${cur.full}!`;
-      if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-      setTimeout(() => { if (mode === 'comp' && compTimer) compNext(); }, 350);
-      return;
-    }
-    winStreak++;
-    const reward = 30 + Math.min(winStreak * 5, 25);
-    coins += reward;
-    solved.push(cur.id);
-    store.set('coins', coins); store.set('solvedIds', solved); store.set('winStreak', winStreak);
-    finished = true;
-    fb.className = 'feedback ok';
-    fb.textContent = `✅ Верно! +${reward} 🪙`;
-    reveal();
-    endRound();
-    if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-  } else if (res === 1) {
-    fb.className = 'feedback close';
-    fb.textContent = '🔶 Очень близко! Проверь написание';
-  } else {
-    fb.className = 'feedback bad';
-    fb.textContent = '❌ Мимо, попробуй ещё';
-    if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
-  }
-  updateStats();
-}
-
-function giveUp() {
-  if (finished || !cur) return;
-  if (mode === 'comp') { if (compTimer) compNext(); return; } // пропуск без штрафа
-  winStreak = 0; store.set('winStreak', 0);
-  finished = true;
-  const fb = document.getElementById('feedback');
-  fb.className = 'feedback bad';
-  fb.textContent = 'Не угадал…';
-  solved.push(cur.id); store.set('solvedIds', solved);
-  reveal();
-  endRound(); updateStats();
-}
-
-function endRound() {
-  renderBoxes();
-  document.getElementById('guess').disabled = true;
-  document.getElementById('checkBtn').disabled = true;
-  document.getElementById('giveBtn').style.display = 'none';
-  document.getElementById('nextBtn').style.display = 'block';
-  progress();
-}
-
-function next() { cur = pick(); openedIdx = []; finished = false; render(); }
-
-function updateStats() {
-  document.getElementById('coins').textContent = coins;
-  document.getElementById('streak').textContent = winStreak;
-}
-
-let toastTimer;
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
-}
-
-document.getElementById('checkBtn').onclick = check;
-document.getElementById('guess').addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
-document.getElementById('nextBtn').onclick = next;
-document.getElementById('giveBtn').onclick = () => {
-  if (mode === 'comp') { giveUp(); return; }
-  if (tg && tg.showConfirm) tg.showConfirm('Сдаться? Серия побед сгорит.', ok => ok && giveUp());
-  else if (confirm('Сдаться? Серия побед сгорит.')) giveUp();
-};
-
-window.__check = checkGuess; // для отладки
-syncTopBar();
-if (difficulty) next();
-show('scrMain');
-</script>
+<script src="players.js?v=4"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>
