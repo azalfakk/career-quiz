@@ -90,12 +90,16 @@ function threshold(len) { return len <= 4 ? 1 : len <= 7 ? 2 : len <= 10 ? 3 : 4
 function lastWord(s) { const p = s.trim().split(/\s+/); return p[p.length - 1]; }
 function checkGuess(guess, p) {
   const isLatin = /[a-z]/i.test(guess) && !/[а-я]/i.test(guess);
+  const norm = isLatin ? normEn : normRu;
+  const targets = isLatin
+    ? [p.en, lastWord(p.en)]
+    : [p.n, lastWord(p.n), p.full, lastWord(p.full), ...(p.alt || []), ...(p.alt || []).map(lastWord)];
+  // формы догадки: целиком и её последнее слово («Маркос Алонсо» → «Алонсо»)
+  const gWhole = norm(guess);
+  const gLast = norm(lastWord(guess));
+  const gForms = gLast && gLast !== gWhole ? [gWhole, gLast] : [gWhole];
   const cands = [];
-  if (isLatin) { const g = normEn(guess); [p.en, lastWord(p.en)].forEach(c => cands.push([g, normEn(c)])); }
-  else {
-    const g = normRu(guess);
-    [p.n, lastWord(p.n), p.full, lastWord(p.full), ...(p.alt || []), ...(p.alt || []).map(lastWord)].forEach(c => cands.push([g, normRu(c)]));
-  }
+  targets.forEach(c => { const nc = norm(c || ''); if (nc) gForms.forEach(g => cands.push([g, nc])); });
   let best = 99, bestLen = 1;
   for (const [g, c] of cands) {
     if (!c) continue;
