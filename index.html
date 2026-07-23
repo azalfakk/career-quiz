@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Угадай футболиста по карьере</title>
-<meta name="description" content="Угадай футболиста по его клубам, матчам и голам. Соревнуйся, вызывай друзей на дуэль и поднимайся в таблице лидеров.">
+<title>Кто по карьере?</title>
+<meta name="description" content="Кто по карьере? Угадай футболиста по его клубам, матчам и голам. Соревнуйся, вызывай друзей на дуэль и поднимайся в таблице лидеров.">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Угадай футболиста по карьере">
-<meta property="og:title" content="Угадай футболиста по карьере">
+<meta property="og:site_name" content="Кто по карьере?">
+<meta property="og:title" content="Кто по карьере?">
 <meta property="og:description" content="Клубы, матчи и голы — а ты назови игрока. Прими вызов друга!">
 <meta property="og:url" content="https://azalfakk.github.io/career-quiz/">
-<meta property="og:image" content="https://azalfakk.github.io/career-quiz/og.png?v=1">
+<meta property="og:image" content="https://azalfakk.github.io/career-quiz/og.png?v=2">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Угадай футболиста по карьере">
+<meta name="twitter:title" content="Кто по карьере?">
 <meta name="twitter:description" content="Клубы, матчи и голы — а ты назови игрока. Прими вызов друга!">
-<meta name="twitter:image" content="https://azalfakk.github.io/career-quiz/og.png?v=1">
+<meta name="twitter:image" content="https://azalfakk.github.io/career-quiz/og.png?v=2">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root {
@@ -134,6 +134,30 @@ textarea:focus { border-color: var(--accent); }
 .dopt .grow { flex: 1; }
 .dopt .cnt { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .backBtn { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--muted); font-size: 13px; padding: 10px; margin-top: 2px; }
+/* красивое главное меню */
+.menuCard { max-width: 440px; }
+.menuHero { text-align: center; padding: 4px 0 18px; }
+.menuHero .logo { font-size: 46px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(0,168,107,.35)); }
+.menuHero .brand { font-size: 25px; font-weight: 800; letter-spacing: -.02em; margin: 8px 0 5px; }
+.menuHero .tagline { color: var(--muted); font-size: 12.5px; line-height: 1.4; margin: 0 auto 13px; max-width: 300px; }
+.menuHero .coinChip { display: inline-flex; align-items: center; gap: 6px; background: var(--row); border: 1px solid var(--border); border-radius: 999px; padding: 6px 15px; font-weight: 800; color: var(--gold); font-size: 14px; font-variant-numeric: tabular-nums; }
+.mtile { display: flex; align-items: center; gap: 12px; width: 100%; background: var(--row); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 9px; text-align: left; color: var(--text); transition: border-color .15s, transform .15s; }
+.mtile:hover { border-color: var(--accent); transform: translateY(-1px); }
+.mtile .mi { width: 42px; height: 42px; border-radius: 11px; background: var(--chip); display: flex; align-items: center; justify-content: center; font-size: 22px; flex: none; }
+.mtile .mi.c-gold { background: rgba(255,194,75,.14); }
+.mtile .mi.c-green { background: rgba(0,168,107,.16); }
+.mtile .mi.c-blue { background: rgba(111,194,255,.14); }
+.mtile .mi.c-red { background: rgba(224,86,86,.14); }
+.mtile .mgrow { flex: 1; min-width: 0; }
+.mtile .mgrow b { display: block; font-size: 15px; font-weight: 700; }
+.mtile .mgrow small { display: block; color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+.mtile .mchevron { color: var(--muted); font-size: 22px; flex: none; }
+.mtile.resume { border-color: var(--accent); background: var(--ok-bg); }
+.mtile.resume .mchevron { color: var(--accent); }
+.mrow2 { display: flex; gap: 9px; margin-top: 2px; }
+.mtile.mini { flex: 1; justify-content: center; gap: 8px; padding: 12px; margin-bottom: 0; }
+.mtile.mini .mi { width: 26px; height: 26px; font-size: 17px; background: transparent; border-radius: 0; }
+.mtile.mini span:last-child { font-weight: 700; font-size: 13.5px; }
 /* leaderboard */
 .podium { display: flex; gap: 8px; align-items: flex-end; justify-content: center; margin: 14px 0; }
 .pod { flex: 1; max-width: 110px; background: var(--row); border: 1px solid var(--border); border-radius: 12px; padding: 10px 6px; text-align: center; }
@@ -185,7 +209,7 @@ textarea:focus { border-color: var(--accent); }
 <div class="top">
   <div class="titleWrap">
     <button class="backTop" id="backTop" aria-label="Назад" style="display:none">‹</button>
-    <div class="title">⚽ Угадай по карьере</div>
+    <div class="title">⚽ Кто по карьере?</div>
   </div>
   <div class="stats">
     <button class="diffBtn" id="menuBtn">Меню</button>
@@ -205,7 +229,7 @@ textarea:focus { border-color: var(--accent); }
   <div class="mid">
     <div class="photoBox" id="photoBox" style="display:none">
       <img id="photoImg" class="blurred" alt="">
-      <button class="photoBtn" id="photoBtn">Фото 🪙 20</button>
+      <button class="photoBtn" id="photoBtn">📸 Фото · 🪙 35</button>
     </div>
     <div class="name-boxes" id="boxes"></div>
   </div>
@@ -227,16 +251,23 @@ textarea:focus { border-color: var(--accent); }
 
 <div class="overlay" id="overlay">
   <!-- главное меню -->
-  <div class="dcard" id="scrMain">
-    <h2>⚽ Угадай по карьере</h2>
-    <div class="sub">Угадай футболиста по клубам, матчам и голам</div>
-    <button class="dopt big" id="goComp"><span class="emoji">🏆</span><span class="grow">Соревновательный<small>60 секунд · таблица лидеров</small></span></button>
-    <button class="dopt big" id="goNormal"><span class="emoji">🎯</span><span class="grow">Обычный режим<small>открывай карьеру постепенно — больше монет</small></span></button>
-    <button class="dopt big" id="goDaily"><span class="emoji">🌟</span><span class="grow">Игрок дня<small>один на всех · стрик · бонусы</small></span></button>
-    <button class="dopt big" id="goPrice"><span class="emoji">💰</span><span class="grow">Кто дороже?<small>угадай, кто ценнее на рынке</small></span></button>
-    <button class="dopt big" id="goDuel"><span class="emoji">⚔️</span><span class="grow">Дуэль с другом<small>одинаковые 10 игроков — кто больше?</small></span></button>
-    <button class="dopt" id="goBoard"><span class="emoji">🏅</span><span class="grow">Таблица лидеров</span></button>
-    <button class="dopt" id="goAch"><span class="emoji">🎖</span><span class="grow">Достижения и эмблемы</span></button>
+  <div class="dcard menuCard" id="scrMain">
+    <div class="menuHero">
+      <div class="logo">⚽</div>
+      <h2 class="brand">Кто по карьере?</h2>
+      <div class="tagline">Угадай футболиста по его клубам, матчам и голам</div>
+      <div class="coinChip">🪙 <span id="menuCoins">0</span></div>
+    </div>
+    <button class="mtile resume" id="goResume" style="display:none"><span class="mi">▶️</span><span class="mgrow"><b>Продолжить</b><small>вернуться к текущему игроку</small></span><span class="mchevron">›</span></button>
+    <button class="mtile" id="goComp"><span class="mi c-gold">🏆</span><span class="mgrow"><b>Соревновательный</b><small>60 секунд · таблица лидеров</small></span><span class="mchevron">›</span></button>
+    <button class="mtile" id="goNormal"><span class="mi c-green">🎯</span><span class="mgrow"><b>Обычный режим</b><small>открывай карьеру постепенно</small></span><span class="mchevron">›</span></button>
+    <button class="mtile" id="goDaily"><span class="mi c-blue">🌟</span><span class="mgrow"><b>Игрок дня</b><small>один на всех · стрик · бонусы</small></span><span class="mchevron">›</span></button>
+    <button class="mtile" id="goPrice"><span class="mi c-gold">💰</span><span class="mgrow"><b>Кто дороже?</b><small>угадай, кто ценнее на рынке</small></span><span class="mchevron">›</span></button>
+    <button class="mtile" id="goDuel"><span class="mi c-red">⚔️</span><span class="mgrow"><b>Дуэль с другом</b><small>одинаковые 10 игроков — кто больше?</small></span><span class="mchevron">›</span></button>
+    <div class="mrow2">
+      <button class="mtile mini" id="goBoard"><span class="mi">🏅</span><span>Лидеры</span></button>
+      <button class="mtile mini" id="goAch"><span class="mi">🎖</span><span>Достижения</span></button>
+    </div>
     <button class="backBtn" id="backMain" style="display:none">← Назад к игре</button>
   </div>
   <!-- выбор сложности -->

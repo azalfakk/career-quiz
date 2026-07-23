@@ -236,10 +236,18 @@ function renderAch() {
 // ---------- меню ----------
 const overlay = $('overlay');
 const screens = ['scrMain', 'scrDiff', 'scrComp', 'scrEnd', 'scrBoard', 'scrAch', 'scrPrice', 'scrDaily', 'scrDuel', 'scrDuelEnd', 'scrReport', 'scrReports'];
+function hasSavedGame() {
+  const g = store.get('game', null);
+  return !!(g && !g.finished && difficulty && PLAYERS.some(p => p.id === g.id));
+}
 function show(id) {
   overlay.classList.remove('hidden');
   screens.forEach(s => $(s).style.display = s === id ? '' : 'none');
-  if (id === 'scrMain') $('backMain').style.display = cur ? '' : 'none';
+  if (id === 'scrMain') {
+    $('menuCoins').textContent = coins;
+    $('backMain').style.display = (cur && mode !== 'help') ? '' : 'none';
+    $('goResume').style.display = (hasSavedGame() && !(cur && mode === 'normal')) ? '' : 'none';
+  }
 }
 function hideMenu() { overlay.classList.add('hidden'); }
 
@@ -267,6 +275,7 @@ function goMenu() {
 $('menuBtn').onclick = goMenu;
 $('backTop').onclick = goMenu;
 $('backMain').onclick = hideMenu;
+$('goResume').onclick = () => { if (restoreGame()) hideMenu(); else next(); };
 $('goNormal').onclick = () => {
   const c = { easy: 0, medium: 0, hard: 0 };
   PLAYERS.forEach(p => c[p.d]++);
@@ -626,23 +635,12 @@ function drawHelpImage(p, revealed, opened) {
     cv.toBlob(b => resolve(b), 'image/png');
   });
 }
-async function shareHelp() {
+function shareHelp() {
   if (!cur) { toast('Сначала открой игрока'); return; }
   const url = PAGE_URL + '?help=' + cur.id + '.' + revealedRows + '.' + openedIdx.join('-');
-  const text = 'Помоги угадать футболиста по карьере! 🤔⚽';
-  let blob = null;
-  try { blob = await drawHelpImage(cur, revealedRows, openedIdx); } catch (e) {}
-  if (blob && navigator.canShare) {
-    const file = new File([blob], 'career.png', { type: 'image/png' });
-    if (navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file], text: text + '\n' + url }); return; }
-      catch (e) { if (e && e.name === 'AbortError') return; }
-    }
-  }
-  // фолбэк: ссылка через Telegram — получатель откроет карьеру в том же состоянии
-  shareTg(text, url);
-  if (blob) { try { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'career.png'; a.click(); } catch (e) {} }
-  toast('Отправь ссылку другу — он увидит эту карьеру');
+  // строго через Telegram (без системного «поделиться»): друг откроет ссылку и увидит
+  // карьеру ровно в этом состоянии
+  shareTg('Помоги угадать футболиста! 🤔⚽ Открой — тут его клубы:', url);
 }
 $('helpBtn').onclick = shareHelp;
 
@@ -745,7 +743,7 @@ function renderPhoto() {
 }
 $('photoBtn').onclick = () => {
   if (photoOpen || finished) return;
-  const cost = 20;
+  const cost = 35;
   const doIt = () => {
     if (coins < cost) { toast('Не хватает монет 😕'); return; }
     coins -= cost; store.set('coins', coins);
@@ -948,7 +946,7 @@ $('giveBtn').onclick = () => {
 const REPORTS_URL = 'https://jsonblob.com/api/jsonBlob/019f903c-be40-763b-bbe5-afb287fb1099';
 $('reportBtn').onclick = () => {
   if (!cur) { toast('Сначала открой игрока'); return; }
-  $('reportPlayer').innerHTML = `Игрок: <b>${esc(cur.full)}</b> <span style="color:var(--muted)">(${esc(cur.en)})</span>`;
+  $('reportPlayer').innerHTML = '🔒 Игрок скрыт, чтобы не спойлерить. Просто опиши ошибку — я пойму, о ком речь.';
   $('reportText').value = '';
   show('scrReport');
 };
@@ -994,15 +992,11 @@ syncTopBar();
 const helpLink = parseHelpLink();
 const incomingDuel = parseDuelLink();
 if (helpLink) {
-  openHelp(helpLink);
+  openHelp(helpLink);                 // пришли по ссылке помощи
 } else if (incomingDuel) {
-  if (difficulty) next();
-  openDuelIntro(incomingDuel);
-} else if (difficulty && restoreGame()) {
-  hideMenu(); // продолжаем сохранённую партию сразу, без меню
+  openDuelIntro(incomingDuel);        // пришли по ссылке дуэли
 } else {
-  if (difficulty) next();
-  show('scrMain');
+  show('scrMain');                    // всегда стартуем с главного меню (партия сохранена — см. «Продолжить»)
 }
 if (new URLSearchParams(location.search).has('reports')) showReports();
 checkAch();
