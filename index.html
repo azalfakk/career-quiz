@@ -15,16 +15,25 @@
 body { background: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100vh; padding-bottom: 30px; }
 .top { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(--panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
 .top .title { font-weight: 700; font-size: 15px; }
-.stats { display: flex; gap: 10px; font-size: 14px; font-weight: 700; }
+.stats { display: flex; gap: 10px; font-size: 14px; font-weight: 700; align-items: center; }
 .coin { color: var(--gold); } .fire { color: #ff8c42; }
+.diffBtn { border: 1px solid var(--border); background: var(--row); color: var(--muted); border-radius: 999px; font-size: 12px; font-weight: 700; padding: 5px 10px; cursor: pointer; }
+.diffBtn.easy { color: var(--accent); border-color: var(--accent); }
+.diffBtn.medium { color: var(--gold); border-color: var(--gold); }
+.diffBtn.hard { color: var(--red); border-color: var(--red); }
 .wrap { max-width: 560px; margin: 0 auto; padding: 12px; }
 .career { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
-.career .head { display: grid; grid-template-columns: 92px 1fr 44px 44px; padding: 8px 12px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); }
-.crow { display: grid; grid-template-columns: 92px 1fr 44px 44px; padding: 10px 12px; font-size: 13px; align-items: center; }
+.career .head { display: grid; grid-template-columns: 84px 1fr 44px 44px; padding: 8px 12px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); }
+.crow { display: grid; grid-template-columns: 84px 1fr 44px 44px; padding: 9px 12px; font-size: 13px; align-items: center; }
 .crow:nth-child(odd) { background: var(--row); }
 .crow .season { color: var(--muted); font-size: 12px; }
-.crow .club b { display: block; font-size: 13px; }
-.crow .club span { color: var(--muted); font-size: 11px; }
+.crow .club { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.crow .crest { width: 22px; height: 22px; object-fit: contain; flex: none; }
+.crow .crest.ph { display: flex; align-items: center; justify-content: center; font-size: 14px; opacity: .5; }
+.crow .cinfo { min-width: 0; }
+.crow .cinfo b { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.crow .cinfo .lg { color: var(--muted); font-size: 11px; display: flex; align-items: center; gap: 4px; }
+.crow .cinfo .lg img { width: 14px; height: 10px; border-radius: 2px; }
 .crow .num { text-align: center; font-weight: 600; }
 .crow .goals { color: #6fc2ff; }
 .name-boxes { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin: 16px 0 6px; }
@@ -42,19 +51,38 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
 .btn-next { background: var(--gold); color: #201500; width: 100%; margin-top: 10px; display: none; }
 .feedback { text-align: center; min-height: 22px; font-size: 14px; font-weight: 600; margin: 8px 0; }
 .feedback.ok { color: var(--accent); } .feedback.bad { color: var(--red); } .feedback.close { color: var(--gold); }
+.reveal { display: none; align-items: center; gap: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-top: 10px; }
+.reveal img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: var(--row); }
+.reveal .rn { font-weight: 700; font-size: 15px; }
+.reveal .rd { color: var(--muted); font-size: 12px; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 26px; background: #1d2a40; border: 1px solid var(--border); color: var(--text); padding: 10px 18px; border-radius: 12px; font-size: 14px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 10; }
 .toast.show { opacity: 1; }
 .progress { text-align: center; color: var(--muted); font-size: 12px; margin-top: 14px; }
+/* difficulty overlay */
+.overlay { position: fixed; inset: 0; background: rgba(8, 12, 20, .82); z-index: 20; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.overlay.hidden { display: none; }
+.dcard { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 22px 18px; width: 100%; max-width: 380px; }
+.dcard h2 { font-size: 17px; text-align: center; margin-bottom: 4px; }
+.dcard .sub { text-align: center; color: var(--muted); font-size: 12.5px; margin-bottom: 16px; }
+.dopt { display: flex; align-items: center; gap: 12px; width: 100%; background: var(--row); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; cursor: pointer; text-align: left; color: var(--text); font-size: 14px; }
+.dopt:hover { border-color: var(--accent); }
+.dopt .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.dopt small { display: block; color: var(--muted); font-weight: 400; font-size: 11.5px; margin-top: 2px; }
+.dopt .grow { flex: 1; }
+.dopt .cnt { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
 <div class="top">
   <div class="title">⚽ Угадай по карьере</div>
-  <div class="stats"><span class="coin">🪙 <span id="coins">0</span></span><span class="fire">🔥 <span id="streak">0</span></span></div>
+  <div class="stats">
+    <button class="diffBtn" id="diffBtn">Сложность</button>
+    <span class="coin">🪙 <span id="coins">0</span></span><span class="fire">🔥 <span id="streak">0</span></span>
+  </div>
 </div>
 <div class="wrap">
   <div class="career">
-    <div class="head"><span>Сезон</span><span>Команда</span><span>🏟</span><span>⚽</span></div>
+    <div class="head"><span>Сезон</span><span>Команда</span><span>Матчи</span><span>Голы</span></div>
     <div id="rows"></div>
   </div>
   <div class="name-boxes" id="boxes"></div>
@@ -64,11 +92,23 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
     <button class="btn-check" id="checkBtn">✓</button>
   </div>
   <div class="feedback" id="feedback"></div>
+  <div class="reveal" id="reveal"><img id="rimg" alt=""><div><div class="rn" id="rname"></div><div class="rd" id="rdesc"></div></div></div>
   <button class="btn-next" id="nextBtn">Следующий игрок ➜</button>
   <button class="btn-give" id="giveBtn">Сдаться (серия сгорит)</button>
   <div class="progress" id="progress"></div>
 </div>
 <div class="toast" id="toast"></div>
+
+<div class="overlay hidden" id="overlay">
+  <div class="dcard">
+    <h2>Выбери сложность</h2>
+    <div class="sub">Сложность зависит от стоимости игрока на трансферном рынке</div>
+    <button class="dopt" data-d="easy"><span class="dot" style="background:var(--accent)"></span><span class="grow">Лёгкая<small>звёзды от 50 млн € (сейчас или в пике)</small></span><span class="cnt" id="cntEasy"></span></button>
+    <button class="dopt" data-d="medium"><span class="dot" style="background:var(--gold)"></span><span class="grow">Средняя<small>крепкие игроки, 25–49 млн €</small></span><span class="cnt" id="cntMedium"></span></button>
+    <button class="dopt" data-d="hard"><span class="dot" style="background:var(--red)"></span><span class="grow">Сложная<small>для знатоков, до 25 млн €</small></span><span class="cnt" id="cntHard"></span></button>
+    <button class="dopt" data-d="all"><span class="dot" style="background:#6fc2ff"></span><span class="grow">Микс<small>все игроки вперемешку</small></span><span class="cnt" id="cntAll"></span></button>
+  </div>
+</div>
 
 <script src="players.js"></script>
 <script>
@@ -86,10 +126,13 @@ const store = {
 
 let coins = store.get('coins', 100);
 let winStreak = store.get('winStreak', 0);
-let solved = store.get('solved', []);
+let solved = store.get('solvedIds', []);   // id-шники отгаданных (v2)
+let difficulty = store.get('difficulty', null); // easy|medium|hard|all
 let openedIdx = [];
 let cur = null;
 let finished = false;
+
+const DIFF_LABEL = { easy: 'Лёгкая', medium: 'Средняя', hard: 'Сложная', all: 'Микс' };
 
 // ---------- ежедневный бонус ----------
 (function daily() {
@@ -137,7 +180,8 @@ function checkGuess(guess, p) {
     [p.en, lastWord(p.en)].forEach(c => cands.push([g, normEn(c)]));
   } else {
     const g = normRu(guess);
-    [p.n, lastWord(p.n), ...(p.alt || []), ...(p.alt || []).map(lastWord)].forEach(c => cands.push([g, normRu(c)]));
+    [p.n, lastWord(p.n), p.full, lastWord(p.full), ...(p.alt || []), ...(p.alt || []).map(lastWord)]
+      .forEach(c => cands.push([g, normRu(c)]));
   }
   let best = 99, bestLen = 1;
   for (const [g, c] of cands) {
@@ -150,34 +194,90 @@ function checkGuess(guess, p) {
   return 0;
 }
 
-// ---------- игра ----------
+// ---------- пул и выбор сложности ----------
+function pool() {
+  return difficulty && difficulty !== 'all' ? PLAYERS.filter(p => p.d === difficulty) : PLAYERS;
+}
 function pick() {
-  const pool = PLAYERS.map((_, i) => i).filter(i => !solved.includes(i));
-  if (!pool.length) { solved = []; store.set('solved', []); return pick(); }
-  return pool[Math.floor(Math.random() * pool.length)];
+  const ids = pool().filter(p => !solved.includes(p.id));
+  if (!ids.length) {
+    // всё отгадано на этой сложности — сбрасываем прогресс по ней
+    const poolIds = new Set(pool().map(p => p.id));
+    solved = solved.filter(id => !poolIds.has(id));
+    store.set('solvedIds', solved);
+    toast('🏆 Всё отгадано на этой сложности! Начинаем заново.');
+    return pick();
+  }
+  return ids[Math.floor(Math.random() * ids.length)];
+}
+
+const overlay = document.getElementById('overlay');
+function showOverlay() {
+  const c = { easy: 0, medium: 0, hard: 0 };
+  PLAYERS.forEach(p => c[p.d]++);
+  document.getElementById('cntEasy').textContent = c.easy;
+  document.getElementById('cntMedium').textContent = c.medium;
+  document.getElementById('cntHard').textContent = c.hard;
+  document.getElementById('cntAll').textContent = PLAYERS.length;
+  overlay.classList.remove('hidden');
+}
+overlay.addEventListener('click', e => {
+  const b = e.target.closest('.dopt'); if (!b) return;
+  difficulty = b.dataset.d;
+  store.set('difficulty', difficulty);
+  overlay.classList.add('hidden');
+  updateDiffBtn();
+  next();
+});
+document.getElementById('diffBtn').onclick = showOverlay;
+function updateDiffBtn() {
+  const b = document.getElementById('diffBtn');
+  b.textContent = DIFF_LABEL[difficulty] || 'Сложность';
+  b.className = 'diffBtn ' + (difficulty && difficulty !== 'all' ? difficulty : '');
+}
+
+// ---------- игра ----------
+const CREST = id => `https://tmssl.akamaized.net/images/wappen/head/${id}.png`;
+const FLAG = cc => `https://flagcdn.com/w20/${cc}.png`;
+
+function careerRow(r) {
+  const [span, club, clubId, league, cc, games, goals] = r;
+  const crest = clubId
+    ? `<img class="crest" src="${CREST(clubId)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=\'crest ph\'>⚽</span>'">`
+    : `<span class="crest ph">⚽</span>`;
+  const lg = league
+    ? `<span class="lg">${cc ? `<img src="${FLAG(cc)}" alt="" loading="lazy">` : ''}${league}</span>`
+    : '';
+  return `<div class="crow"><span class="season">${span}</span><span class="club">${crest}<span class="cinfo"><b>${club}</b>${lg}</span></span><span class="num">${games}</span><span class="num goals">${goals}</span></div>`;
 }
 
 function render() {
-  const p = PLAYERS[cur];
-  document.getElementById('rows').innerHTML = p.c.map(r =>
-    `<div class="crow"><span class="season">${r[0]}</span><span class="club"><b>${r[1]}</b><span>${r[2]}</span></span><span class="num">${r[3]}</span><span class="num goals">${r[4]}</span></div>`
-  ).join('');
+  const p = cur;
+  document.getElementById('rows').innerHTML = p.c.map(careerRow).join('');
   renderBoxes();
   document.getElementById('feedback').textContent = '';
   document.getElementById('feedback').className = 'feedback';
+  document.getElementById('reveal').style.display = 'none';
   document.getElementById('guess').value = '';
   document.getElementById('guess').disabled = false;
   document.getElementById('checkBtn').disabled = false;
   document.getElementById('nextBtn').style.display = 'none';
   document.getElementById('giveBtn').style.display = 'block';
-  document.getElementById('progress').textContent = `Отгадано: ${solved.length} из ${PLAYERS.length}`;
+  progress();
   updateStats();
+}
+
+function progress() {
+  const total = pool().length;
+  const done = pool().filter(p => solved.includes(p.id)).length;
+  document.getElementById('progress').textContent =
+    `Отгадано: ${done} из ${total} · ${DIFF_LABEL[difficulty] || ''}`;
 }
 
 function letterCost() { return 5 * Math.pow(2, openedIdx.length); }
 
 function renderBoxes() {
-  const name = PLAYERS[cur].n;
+  const name = cur.n;
   const el = document.getElementById('boxes');
   el.innerHTML = '';
   [...name].forEach((ch, i) => {
@@ -206,21 +306,31 @@ function buyLetter(i) {
   else if (confirm(`Открыть букву за ${cost} монет?`)) doIt();
 }
 
+function reveal() {
+  const r = document.getElementById('reveal');
+  document.getElementById('rname').textContent = cur.full;
+  document.getElementById('rdesc').textContent = cur.en;
+  const img = document.getElementById('rimg');
+  if (cur.img) { img.src = cur.img; img.style.display = ''; } else img.style.display = 'none';
+  r.style.display = 'flex';
+}
+
 function check() {
   if (finished) return;
   const guess = document.getElementById('guess').value.trim();
   if (!guess) return;
-  const res = checkGuess(guess, PLAYERS[cur]);
+  const res = checkGuess(guess, cur);
   const fb = document.getElementById('feedback');
   if (res === 2) {
     winStreak++;
     const reward = 30 + Math.min(winStreak * 5, 25);
     coins += reward;
-    solved.push(cur);
-    store.set('coins', coins); store.set('solved', solved); store.set('winStreak', winStreak);
+    solved.push(cur.id);
+    store.set('coins', coins); store.set('solvedIds', solved); store.set('winStreak', winStreak);
     finished = true;
     fb.className = 'feedback ok';
-    fb.textContent = `✅ Верно! Это ${PLAYERS[cur].full} · +${reward} 🪙`;
+    fb.textContent = `✅ Верно! +${reward} 🪙`;
+    reveal();
     endRound();
     if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
   } else if (res === 1) {
@@ -240,8 +350,9 @@ function giveUp() {
   finished = true;
   const fb = document.getElementById('feedback');
   fb.className = 'feedback bad';
-  fb.textContent = `Это был ${PLAYERS[cur].full}`;
-  solved.push(cur); store.set('solved', solved);
+  fb.textContent = 'Не угадал…';
+  solved.push(cur.id); store.set('solvedIds', solved);
+  reveal();
   endRound(); updateStats();
 }
 
@@ -251,7 +362,7 @@ function endRound() {
   document.getElementById('checkBtn').disabled = true;
   document.getElementById('giveBtn').style.display = 'none';
   document.getElementById('nextBtn').style.display = 'block';
-  document.getElementById('progress').textContent = `Отгадано: ${solved.length} из ${PLAYERS.length}`;
+  progress();
 }
 
 function next() { cur = pick(); openedIdx = []; finished = false; render(); }
@@ -278,7 +389,9 @@ document.getElementById('giveBtn').onclick = () => {
 };
 
 window.__check = checkGuess; // для отладки
-next();
+if (difficulty) { updateDiffBtn(); next(); }
+else { showOverlay(); cur = null; }
+if (!cur && difficulty) next();
 </script>
 </body>
 </html>
