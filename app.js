@@ -631,16 +631,34 @@ function drawHelpImage(p, revealed, opened) {
       x += bw + gap;
     });
     g.fillStyle = C.muted; g.font = '19px "Segoe UI",Arial'; g.textAlign = 'center';
-    g.fillText('Помоги угадать · azalfakk.github.io/career-quiz', W / 2, H - 22); g.textAlign = 'left';
+    g.fillText('⚽ Кто по карьере? — угадай футболиста', W / 2, H - 22); g.textAlign = 'left';
     cv.toBlob(b => resolve(b), 'image/png');
   });
 }
-function shareHelp() {
+async function shareHelp() {
   if (!cur) { toast('Сначала открой игрока'); return; }
-  const url = PAGE_URL + '?help=' + cur.id + '.' + revealedRows + '.' + openedIdx.join('-');
-  // строго через Telegram (без системного «поделиться»): друг откроет ссылку и увидит
-  // карьеру ровно в этом состоянии
-  shareTg('Помоги угадать футболиста! 🤔⚽ Открой — тут его клубы:', url);
+  let blob;
+  try { blob = await drawHelpImage(cur, revealedRows, openedIdx); } catch (e) {}
+  if (!blob) { toast('Не удалось создать картинку'); return; }
+  const file = new File([blob], 'career.png', { type: 'image/png' });
+  // 1) отправка КАРТИНКИ (без ссылки и ника) — в Telegram уйдёт как фото
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], text: 'Кто это? Угадай футболиста по карьере ⚽🤔' }); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  // 2) копирование картинки в буфер — вставить в любой чат
+  try {
+    if (navigator.clipboard && window.ClipboardItem) {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      toast('🖼 Картинка скопирована — вставь в чат другу');
+      return;
+    }
+  } catch (e) {}
+  // 3) скачивание как последний вариант
+  try {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'career.png'; a.click();
+    toast('🖼 Картинка сохранена — отправь другу');
+  } catch (e) { toast('Не получилось поделиться'); }
 }
 $('helpBtn').onclick = shareHelp;
 
