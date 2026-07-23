@@ -9,7 +9,7 @@
 :root {
   --bg: #0e1420; --panel: #141c2b; --row: #182236; --row2: #141c2b;
   --text: #e8edf5; --muted: #8494ab; --accent: #00a86b; --gold: #ffc24b;
-  --red: #e05656; --border: #223049;
+  --red: #e05656; --border: #223049; --blue: #6fc2ff;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { background: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100vh; padding-bottom: 30px; }
@@ -17,6 +17,9 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, "S
 .top .title { font-weight: 700; font-size: 15px; }
 .stats { display: flex; gap: 10px; font-size: 14px; font-weight: 700; align-items: center; }
 .coin { color: var(--gold); } .fire { color: #ff8c42; }
+.timer { color: var(--blue); font-variant-numeric: tabular-nums; }
+.timer.low { color: var(--red); }
+.score { color: var(--accent); }
 .diffBtn { border: 1px solid var(--border); background: var(--row); color: var(--muted); border-radius: 999px; font-size: 12px; font-weight: 700; padding: 5px 10px; cursor: pointer; }
 .diffBtn.easy { color: var(--accent); border-color: var(--accent); }
 .diffBtn.medium { color: var(--gold); border-color: var(--gold); }
@@ -35,11 +38,12 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, "S
 .crow .cinfo .lg { color: var(--muted); font-size: 11px; display: flex; align-items: center; gap: 4px; }
 .crow .cinfo .lg img { width: 14px; height: 10px; border-radius: 2px; }
 .crow .num { text-align: center; font-weight: 600; }
-.crow .goals { color: #6fc2ff; }
+.crow .goals { color: var(--blue); }
 .name-boxes { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin: 16px 0 6px; }
 .lbox { width: 30px; height: 38px; border-radius: 7px; background: var(--row); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; cursor: pointer; user-select: none; }
 .lbox.open { background: #1d3a2c; border-color: var(--accent); cursor: default; }
 .lbox.space { width: 12px; background: transparent; border: none; cursor: default; }
+.lbox.locked { cursor: default; }
 .hint-cost { text-align: center; color: var(--muted); font-size: 12px; margin-bottom: 12px; }
 .hint-cost b { color: var(--gold); }
 .guess-row { display: flex; gap: 8px; margin-bottom: 10px; }
@@ -55,29 +59,49 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
 .reveal img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: var(--row); }
 .reveal .rn { font-weight: 700; font-size: 15px; }
 .reveal .rd { color: var(--muted); font-size: 12px; }
-.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 26px; background: #1d2a40; border: 1px solid var(--border); color: var(--text); padding: 10px 18px; border-radius: 12px; font-size: 14px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 10; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 26px; background: #1d2a40; border: 1px solid var(--border); color: var(--text); padding: 10px 18px; border-radius: 12px; font-size: 14px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 30; }
 .toast.show { opacity: 1; }
 .progress { text-align: center; color: var(--muted); font-size: 12px; margin-top: 14px; }
-/* difficulty overlay */
-.overlay { position: fixed; inset: 0; background: rgba(8, 12, 20, .82); z-index: 20; display: flex; align-items: center; justify-content: center; padding: 20px; }
+/* overlay + menu screens */
+.overlay { position: fixed; inset: 0; background: rgba(8, 12, 20, .88); z-index: 20; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
 .overlay.hidden { display: none; }
-.dcard { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 22px 18px; width: 100%; max-width: 380px; }
+.dcard { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 22px 18px; width: 100%; max-width: 400px; }
 .dcard h2 { font-size: 17px; text-align: center; margin-bottom: 4px; }
-.dcard .sub { text-align: center; color: var(--muted); font-size: 12.5px; margin-bottom: 16px; }
-.dopt { display: flex; align-items: center; gap: 12px; width: 100%; background: var(--row); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; cursor: pointer; text-align: left; color: var(--text); font-size: 14px; }
+.dcard .sub { text-align: center; color: var(--muted); font-size: 12.5px; margin-bottom: 16px; line-height: 1.45; }
+.dopt { display: flex; align-items: center; gap: 12px; width: 100%; background: var(--row); border: 1px solid var(--border); border-radius: 12px; padding: 13px 14px; margin-bottom: 10px; cursor: pointer; text-align: left; color: var(--text); font-size: 14px; }
 .dopt:hover { border-color: var(--accent); }
+.dopt.big { padding: 16px 14px; font-size: 15px; }
 .dopt .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.dopt .emoji { font-size: 20px; flex: none; }
 .dopt small { display: block; color: var(--muted); font-weight: 400; font-size: 11.5px; margin-top: 2px; }
 .dopt .grow { flex: 1; }
 .dopt .cnt { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.backBtn { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--muted); font-size: 13px; padding: 10px; margin-top: 2px; }
+/* leaderboard */
+.podium { display: flex; gap: 8px; align-items: flex-end; justify-content: center; margin: 14px 0; }
+.pod { flex: 1; max-width: 110px; background: var(--row); border: 1px solid var(--border); border-radius: 12px; padding: 10px 6px; text-align: center; }
+.pod .medal { font-size: 22px; }
+.pod .pn { font-size: 12px; font-weight: 700; margin: 4px 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pod .ps { font-size: 16px; font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+.pod.first { border-color: var(--gold); padding-top: 16px; }
+.lrow { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 9px; font-size: 13px; }
+.lrow:nth-child(odd) { background: var(--row); }
+.lrow .pos { width: 26px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.lrow .nm { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lrow .sc { font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.lrow.me { outline: 1px solid var(--accent); background: #14301f; }
+.bigScore { text-align: center; font-size: 40px; font-weight: 800; color: var(--gold); margin: 8px 0 2px; }
+.lboard { max-height: 260px; overflow-y: auto; margin: 8px 0; }
+.lnote { text-align: center; color: var(--muted); font-size: 11.5px; margin-top: 8px; }
 </style>
 </head>
 <body>
 <div class="top">
   <div class="title">⚽ Угадай по карьере</div>
   <div class="stats">
-    <button class="diffBtn" id="diffBtn">Сложность</button>
-    <span class="coin">🪙 <span id="coins">0</span></span><span class="fire">🔥 <span id="streak">0</span></span>
+    <button class="diffBtn" id="menuBtn">Меню</button>
+    <span id="statNormal"><span class="coin">🪙 <span id="coins">0</span></span> <span class="fire">🔥 <span id="streak">0</span></span></span>
+    <span id="statComp" style="display:none"><span class="score">✅ <span id="compScore">0</span></span> <span class="timer" id="timer">60</span></span>
   </div>
 </div>
 <div class="wrap">
@@ -99,14 +123,48 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
 </div>
 <div class="toast" id="toast"></div>
 
-<div class="overlay hidden" id="overlay">
-  <div class="dcard">
+<div class="overlay" id="overlay">
+  <!-- главное меню -->
+  <div class="dcard" id="scrMain">
+    <h2>⚽ Угадай по карьере</h2>
+    <div class="sub">Угадай футболиста по списку его клубов, матчей и голов</div>
+    <button class="dopt big" id="goComp"><span class="emoji">🏆</span><span class="grow">Соревновательный режим<small>60 секунд · все игроки · таблица лидеров</small></span></button>
+    <button class="dopt big" id="goNormal"><span class="emoji">🎯</span><span class="grow">Обычный режим<small>без таймера · монеты и подсказки</small></span></button>
+    <button class="dopt" id="goBoard"><span class="emoji">🏅</span><span class="grow">Таблица лидеров</span></button>
+    <button class="backBtn" id="backMain" style="display:none">← Назад к игре</button>
+  </div>
+  <!-- выбор сложности -->
+  <div class="dcard" id="scrDiff" style="display:none">
     <h2>Выбери сложность</h2>
-    <div class="sub">Сложность зависит от стоимости игрока на трансферном рынке</div>
+    <div class="sub">По стоимости игрока на трансферном рынке.<br>Новая сложность применится со следующего игрока.</div>
     <button class="dopt" data-d="easy"><span class="dot" style="background:var(--accent)"></span><span class="grow">Лёгкая<small>звёзды от 50 млн € (сейчас или в пике)</small></span><span class="cnt" id="cntEasy"></span></button>
     <button class="dopt" data-d="medium"><span class="dot" style="background:var(--gold)"></span><span class="grow">Средняя<small>крепкие игроки, 25–49 млн €</small></span><span class="cnt" id="cntMedium"></span></button>
     <button class="dopt" data-d="hard"><span class="dot" style="background:var(--red)"></span><span class="grow">Сложная<small>для знатоков, до 25 млн €</small></span><span class="cnt" id="cntHard"></span></button>
-    <button class="dopt" data-d="all"><span class="dot" style="background:#6fc2ff"></span><span class="grow">Микс<small>все игроки вперемешку</small></span><span class="cnt" id="cntAll"></span></button>
+    <button class="dopt" data-d="all"><span class="dot" style="background:var(--blue)"></span><span class="grow">Микс<small>все игроки вперемешку</small></span><span class="cnt" id="cntAll"></span></button>
+    <button class="backBtn" id="backDiff">← Назад</button>
+  </div>
+  <!-- правила соревновательного -->
+  <div class="dcard" id="scrComp" style="display:none">
+    <h2>🏆 Соревновательный режим</h2>
+    <div class="sub">За <b>60 секунд</b> отгадай как можно больше футболистов.<br>Играют все 500 игроков вперемешку.<br>Подсказок нет, пропуск — без штрафа.</div>
+    <button class="dopt big" id="compStart" style="justify-content:center"><span class="emoji">▶️</span><span style="font-weight:800">Старт!</span></button>
+    <button class="backBtn" id="backComp">← Назад</button>
+  </div>
+  <!-- результат соревновательного -->
+  <div class="dcard" id="scrEnd" style="display:none">
+    <h2>⏱ Время вышло!</h2>
+    <div class="bigScore" id="endScore">0</div>
+    <div class="sub" id="endNote">игроков отгадано</div>
+    <div id="endBoard"></div>
+    <button class="dopt big" id="compAgain" style="justify-content:center"><span class="emoji">🔁</span><span style="font-weight:800">Ещё раз</span></button>
+    <button class="backBtn" id="endMenu">← В меню</button>
+  </div>
+  <!-- таблица лидеров -->
+  <div class="dcard" id="scrBoard" style="display:none">
+    <h2>🏅 Таблица лидеров</h2>
+    <div class="sub">Лучшие результаты соревновательного режима</div>
+    <div id="boardBox"></div>
+    <button class="backBtn" id="backBoard">← Назад</button>
   </div>
 </div>
 
@@ -115,7 +173,7 @@ button { border: none; border-radius: 10px; font-size: 15px; font-weight: 700; c
 const tg = window.Telegram && window.Telegram.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 
-// ---------- хранилище (Telegram CloudStorage + localStorage) ----------
+// ---------- хранилище ----------
 const store = {
   get(k, def) { try { const v = localStorage.getItem(k); return v === null ? def : JSON.parse(v); } catch (e) { return def; } },
   set(k, v) {
@@ -126,11 +184,15 @@ const store = {
 
 let coins = store.get('coins', 100);
 let winStreak = store.get('winStreak', 0);
-let solved = store.get('solvedIds', []);   // id-шники отгаданных (v2)
-let difficulty = store.get('difficulty', null); // easy|medium|hard|all
+let solved = store.get('solvedIds', []);
+let difficulty = store.get('difficulty', null);
 let openedIdx = [];
 let cur = null;
 let finished = false;
+let mode = 'normal'; // normal | comp
+
+// comp state
+let compTime = 60, compScoreVal = 0, compTimer = null, compQueue = [];
 
 const DIFF_LABEL = { easy: 'Лёгкая', medium: 'Средняя', hard: 'Сложная', all: 'Микс' };
 
@@ -171,7 +233,6 @@ function lev(a, b) {
 function threshold(len) { return len <= 4 ? 1 : len <= 7 ? 2 : len <= 10 ? 3 : 4; }
 function lastWord(s) { const p = s.trim().split(/\s+/); return p[p.length - 1]; }
 
-// вернёт: 2 = принято, 1 = почти, 0 = мимо
 function checkGuess(guess, p) {
   const isLatin = /[a-z]/i.test(guess) && !/[а-я]/i.test(guess);
   const cands = [];
@@ -194,14 +255,179 @@ function checkGuess(guess, p) {
   return 0;
 }
 
-// ---------- пул и выбор сложности ----------
+// ---------- лидерборд ----------
+const BOARD_URL = 'https://jsonblob.com/api/jsonBlob/019f8f02-5291-78e4-9616-07a7671ed12b';
+function me() {
+  const u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+  if (u) return { id: 'tg' + u.id, name: u.username ? '@' + u.username : [u.first_name, u.last_name].filter(Boolean).join(' ') };
+  let gid = store.get('guestId', null);
+  if (!gid) { gid = 'g' + Math.random().toString(36).slice(2, 8); store.set('guestId', gid); }
+  return { id: gid, name: 'Гость-' + gid.slice(1, 5) };
+}
+async function boardGet() {
+  const r = await fetch(BOARD_URL, { cache: 'no-store' });
+  if (!r.ok) throw new Error('board http ' + r.status);
+  const j = await r.json();
+  return Array.isArray(j.scores) ? j.scores : [];
+}
+async function boardSubmit(score) {
+  const who = me();
+  try {
+    let scores = await boardGet();
+    const mine = scores.find(x => x.id === who.id);
+    if (mine) { if (score > mine.s) { mine.s = score; mine.t = Date.now(); mine.name = who.name; } }
+    else scores.push({ id: who.id, name: who.name, s: score, t: Date.now() });
+    scores.sort((a, b) => b.s - a.s || a.t - b.t);
+    scores = scores.slice(0, 100);
+    await fetch(BOARD_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scores }) });
+    return scores;
+  } catch (e) {
+    // офлайн-фолбэк: локальная таблица
+    let scores = store.get('localBoard', []);
+    const mine = scores.find(x => x.id === who.id);
+    if (mine) { if (score > mine.s) { mine.s = score; mine.t = Date.now(); } }
+    else scores.push({ id: who.id, name: who.name, s: score, t: Date.now() });
+    scores.sort((a, b) => b.s - a.s || a.t - b.t);
+    store.set('localBoard', scores);
+    return scores;
+  }
+}
+function boardHTML(scores, highlightId) {
+  if (!scores.length) return '<div class="sub">Пока никто не играл — будь первым!</div>';
+  const medals = ['🥇', '🥈', '🥉'];
+  const top3 = scores.slice(0, 3);
+  const order = top3.length === 3 ? [top3[1], top3[0], top3[2]] : top3;
+  let h = '<div class="podium">' + order.map(p => {
+    const isFirst = p === top3[0];
+    return `<div class="pod ${isFirst ? 'first' : ''}"><div class="medal">${medals[top3.indexOf(p)]}</div><div class="pn">${esc(p.name)}</div><div class="ps">${p.s}</div></div>`;
+  }).join('') + '</div>';
+  if (scores.length > 3) {
+    h += '<div class="lboard">' + scores.slice(3, 30).map((p, i) =>
+      `<div class="lrow ${p.id === highlightId ? 'me' : ''}"><span class="pos">${i + 4}</span><span class="nm">${esc(p.name)}</span><span class="sc">${p.s}</span></div>`
+    ).join('') + '</div>';
+  }
+  const myPos = scores.findIndex(x => x.id === highlightId);
+  if (myPos >= 0) h += `<div class="lnote">Твоё место: ${myPos + 1} из ${scores.length}</div>`;
+  return h;
+}
+function esc(s) { return String(s).replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
+
+// ---------- меню ----------
+const overlay = document.getElementById('overlay');
+const screens = ['scrMain', 'scrDiff', 'scrComp', 'scrEnd', 'scrBoard'];
+function show(id) {
+  overlay.classList.remove('hidden');
+  screens.forEach(s => document.getElementById(s).style.display = s === id ? '' : 'none');
+  if (id === 'scrMain') document.getElementById('backMain').style.display = cur ? '' : 'none';
+}
+function hideMenu() { overlay.classList.add('hidden'); }
+
+document.getElementById('menuBtn').onclick = () => {
+  if (mode === 'comp' && compTimer) return; // во время раунда меню недоступно
+  show('scrMain');
+};
+document.getElementById('backMain').onclick = hideMenu;
+document.getElementById('goNormal').onclick = () => {
+  const c = { easy: 0, medium: 0, hard: 0 };
+  PLAYERS.forEach(p => c[p.d]++);
+  document.getElementById('cntEasy').textContent = c.easy;
+  document.getElementById('cntMedium').textContent = c.medium;
+  document.getElementById('cntHard').textContent = c.hard;
+  document.getElementById('cntAll').textContent = PLAYERS.length;
+  show('scrDiff');
+};
+document.getElementById('backDiff').onclick = () => show('scrMain');
+document.getElementById('goComp').onclick = () => show('scrComp');
+document.getElementById('backComp').onclick = () => show('scrMain');
+document.getElementById('compStart').onclick = startComp;
+document.getElementById('compAgain').onclick = startComp;
+document.getElementById('endMenu').onclick = () => show('scrMain');
+document.getElementById('goBoard').onclick = async () => {
+  show('scrBoard');
+  document.getElementById('boardBox').innerHTML = '<div class="sub">Загружаю…</div>';
+  let scores;
+  try { scores = await boardGet(); } catch (e) { scores = store.get('localBoard', []); }
+  document.getElementById('boardBox').innerHTML = boardHTML(scores, me().id);
+};
+document.getElementById('backBoard').onclick = () => show('scrMain');
+
+document.getElementById('scrDiff').addEventListener('click', e => {
+  const b = e.target.closest('.dopt'); if (!b || !b.dataset.d) return;
+  const prev = difficulty;
+  difficulty = b.dataset.d;
+  store.set('difficulty', difficulty);
+  updateMenuBtn();
+  hideMenu();
+  if (mode === 'comp') { stopComp(false); }
+  mode = 'normal'; syncTopBar();
+  // античит: текущий игрок не меняется при смене сложности
+  if (!cur || finished || prev === null) next();
+  else { progress(); toast('Сложность применится со следующего игрока'); }
+});
+
+function updateMenuBtn() {
+  const b = document.getElementById('menuBtn');
+  if (mode === 'comp') { b.textContent = '🏆'; b.className = 'diffBtn'; return; }
+  b.textContent = DIFF_LABEL[difficulty] || 'Меню';
+  b.className = 'diffBtn ' + (difficulty && difficulty !== 'all' ? difficulty : '');
+}
+function syncTopBar() {
+  document.getElementById('statNormal').style.display = mode === 'comp' ? 'none' : '';
+  document.getElementById('statComp').style.display = mode === 'comp' ? '' : 'none';
+  document.getElementById('giveBtn').textContent = mode === 'comp' ? 'Пропустить ➜' : 'Сдаться (серия сгорит)';
+  updateMenuBtn();
+}
+
+// ---------- соревновательный режим ----------
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function startComp() {
+  mode = 'comp';
+  compTime = 60; compScoreVal = 0;
+  compQueue = shuffle([...PLAYERS]);
+  syncTopBar();
+  hideMenu();
+  document.getElementById('compScore').textContent = '0';
+  const tEl = document.getElementById('timer');
+  tEl.textContent = '60'; tEl.classList.remove('low');
+  clearInterval(compTimer);
+  compTimer = setInterval(() => {
+    compTime--;
+    tEl.textContent = compTime;
+    if (compTime <= 10) tEl.classList.add('low');
+    if (compTime <= 0) stopComp(true);
+  }, 1000);
+  compNext();
+}
+function compNext() {
+  if (!compQueue.length) compQueue = shuffle([...PLAYERS]);
+  cur = compQueue.pop();
+  openedIdx = []; finished = false;
+  render();
+}
+function stopComp(showResult) {
+  clearInterval(compTimer); compTimer = null;
+  if (!showResult) { mode = 'normal'; syncTopBar(); return; }
+  const s = compScoreVal;
+  if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+  document.getElementById('endScore').textContent = s;
+  document.getElementById('endNote').textContent = s === 0 ? 'В следующий раз получится!' : (s === 1 ? 'игрок отгадан' : (s < 5 ? 'игрока отгадано' : 'игроков отгадано'));
+  document.getElementById('endBoard').innerHTML = '<div class="sub">Отправляю результат…</div>';
+  show('scrEnd');
+  boardSubmit(s).then(scores => {
+    document.getElementById('endBoard').innerHTML = boardHTML(scores, me().id);
+  });
+  mode = 'normal'; cur = null; syncTopBar();
+  // вернуть обычную игру под оверлеем
+  if (difficulty) next();
+}
+
+// ---------- игра ----------
 function pool() {
   return difficulty && difficulty !== 'all' ? PLAYERS.filter(p => p.d === difficulty) : PLAYERS;
 }
 function pick() {
   const ids = pool().filter(p => !solved.includes(p.id));
   if (!ids.length) {
-    // всё отгадано на этой сложности — сбрасываем прогресс по ней
     const poolIds = new Set(pool().map(p => p.id));
     solved = solved.filter(id => !poolIds.has(id));
     store.set('solvedIds', solved);
@@ -211,45 +437,25 @@ function pick() {
   return ids[Math.floor(Math.random() * ids.length)];
 }
 
-const overlay = document.getElementById('overlay');
-function showOverlay() {
-  const c = { easy: 0, medium: 0, hard: 0 };
-  PLAYERS.forEach(p => c[p.d]++);
-  document.getElementById('cntEasy').textContent = c.easy;
-  document.getElementById('cntMedium').textContent = c.medium;
-  document.getElementById('cntHard').textContent = c.hard;
-  document.getElementById('cntAll').textContent = PLAYERS.length;
-  overlay.classList.remove('hidden');
-}
-overlay.addEventListener('click', e => {
-  const b = e.target.closest('.dopt'); if (!b) return;
-  difficulty = b.dataset.d;
-  store.set('difficulty', difficulty);
-  overlay.classList.add('hidden');
-  updateDiffBtn();
-  next();
-});
-document.getElementById('diffBtn').onclick = showOverlay;
-function updateDiffBtn() {
-  const b = document.getElementById('diffBtn');
-  b.textContent = DIFF_LABEL[difficulty] || 'Сложность';
-  b.className = 'diffBtn ' + (difficulty && difficulty !== 'all' ? difficulty : '');
-}
-
-// ---------- игра ----------
-const CREST = id => `https://tmssl.akamaized.net/images/wappen/head/${id}.png`;
+const CREST1 = id => `https://tmssl.akamaized.net/images/wappen/head/${id}.png`;
+const CREST2 = id => `https://tmssl.akamaized.net/images/wappen/normquad/${id}.png`;
 const FLAG = cc => `https://flagcdn.com/w20/${cc}.png`;
 
 function careerRow(r) {
   const [span, club, clubId, league, cc, games, goals] = r;
+  const isUrl = typeof clubId === 'string';
   const crest = clubId
-    ? `<img class="crest" src="${CREST(clubId)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=\'crest ph\'>⚽</span>'">`
+    ? `<img class="crest" src="${isUrl ? clubId : CREST1(clubId)}" alt="" loading="lazy" data-alt="${isUrl ? '' : CREST2(clubId)}" onerror="crestFallback(this)">`
     : `<span class="crest ph">⚽</span>`;
   const lg = league
-    ? `<span class="lg">${cc ? `<img src="${FLAG(cc)}" alt="" loading="lazy">` : ''}${league}</span>`
+    ? `<span class="lg">${cc ? `<img src="${FLAG(cc)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}${league}</span>`
     : '';
   return `<div class="crow"><span class="season">${span}</span><span class="club">${crest}<span class="cinfo"><b>${club}</b>${lg}</span></span><span class="num">${games}</span><span class="num goals">${goals}</span></div>`;
 }
+window.crestFallback = function (img) {
+  if (img.dataset.alt) { img.src = img.dataset.alt; img.dataset.alt = ''; }
+  else img.outerHTML = '<span class="crest ph">⚽</span>';
+};
 
 function render() {
   const p = cur;
@@ -265,9 +471,11 @@ function render() {
   document.getElementById('giveBtn').style.display = 'block';
   progress();
   updateStats();
+  if (mode === 'comp') document.getElementById('guess').focus();
 }
 
 function progress() {
+  if (mode === 'comp') { document.getElementById('progress').textContent = 'Соревновательный режим'; return; }
   const total = pool().length;
   const done = pool().filter(p => solved.includes(p.id)).length;
   document.getElementById('progress').textContent =
@@ -284,13 +492,14 @@ function renderBoxes() {
     const d = document.createElement('div');
     if (ch === ' ' || ch === '-') { d.className = 'lbox space'; }
     else if (openedIdx.includes(i) || finished) { d.className = 'lbox open'; d.textContent = ch.toUpperCase(); }
+    else if (mode === 'comp') { d.className = 'lbox locked'; }
     else {
       d.className = 'lbox';
       d.onclick = () => buyLetter(i);
     }
     el.appendChild(d);
   });
-  document.getElementById('hintCost').innerHTML = finished ? '' :
+  document.getElementById('hintCost').innerHTML = (finished || mode === 'comp') ? '' :
     `Нажми на клетку, чтобы открыть букву — <b>🪙 ${letterCost()}</b>`;
 }
 
@@ -316,12 +525,21 @@ function reveal() {
 }
 
 function check() {
-  if (finished) return;
+  if (finished || !cur) return;
   const guess = document.getElementById('guess').value.trim();
   if (!guess) return;
   const res = checkGuess(guess, cur);
   const fb = document.getElementById('feedback');
   if (res === 2) {
+    if (mode === 'comp') {
+      compScoreVal++;
+      document.getElementById('compScore').textContent = compScoreVal;
+      fb.className = 'feedback ok';
+      fb.textContent = `✅ ${cur.full}!`;
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+      setTimeout(() => { if (mode === 'comp' && compTimer) compNext(); }, 350);
+      return;
+    }
     winStreak++;
     const reward = 30 + Math.min(winStreak * 5, 25);
     coins += reward;
@@ -345,7 +563,8 @@ function check() {
 }
 
 function giveUp() {
-  if (finished) return;
+  if (finished || !cur) return;
+  if (mode === 'comp') { if (compTimer) compNext(); return; } // пропуск без штрафа
   winStreak = 0; store.set('winStreak', 0);
   finished = true;
   const fb = document.getElementById('feedback');
@@ -384,14 +603,15 @@ document.getElementById('checkBtn').onclick = check;
 document.getElementById('guess').addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
 document.getElementById('nextBtn').onclick = next;
 document.getElementById('giveBtn').onclick = () => {
+  if (mode === 'comp') { giveUp(); return; }
   if (tg && tg.showConfirm) tg.showConfirm('Сдаться? Серия побед сгорит.', ok => ok && giveUp());
   else if (confirm('Сдаться? Серия побед сгорит.')) giveUp();
 };
 
 window.__check = checkGuess; // для отладки
-if (difficulty) { updateDiffBtn(); next(); }
-else { showOverlay(); cur = null; }
-if (!cur && difficulty) next();
+syncTopBar();
+if (difficulty) next();
+show('scrMain');
 </script>
 </body>
 </html>
